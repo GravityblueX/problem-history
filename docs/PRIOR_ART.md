@@ -2,6 +2,34 @@
 
 “问题史”不是从零发明一种史学。它明显与若干已有传统相邻。本项目应该主动承认这些谱系，再说明自己要组合、推进或实验什么。
 
+## 0. 先处理同名传统：Problemgeschichte
+
+这里不能只说“相邻”。`Problemgeschichte` 本身就是已有方法史术语。
+
+19 世纪已经出现围绕哲学问题而非单纯思想家/体系组织哲学史的尝试；Windelband 1892 年《哲学史》把重心放在“问题与概念的历史”上，Nicolai Hartmann 又在 1909/1910 年《Zur Methode der Philosophiegeschichte》中把 Problemgeschichte 明确提升为方法论方案。
+
+### 最重要的区别
+
+Hartmann 式 Problemgeschichte 倾向于承认某些“问题内容”跨时代保持相对同一，历史变化主要发生在问题表述、问题处境和解决尝试上。
+
+本项目不能继承这个前提。
+
+> **问题是否跨时期仍然是“同一个问题”，本身就是待证的历史命题。**
+
+这使本项目在关键点上更接近 Gadamer 对 Problemgeschichte 的批评：不能因为研究者今天能用一个标题概括若干历史材料，就默认历史行动者一直在处理同一个永恒问题。
+
+此外，Otto Gerhard Oexle 对 1880–1932 年 Problemgeschichte 的梳理、Max Weber 关于“问题联系”组织科学领域的命题、Dirk Werle 的文学史 Problemgeschichte，以及 Marco Sgarbi 2010 年之后对新 Problemgeschichte 的重建，都说明“研究问题的历史”并不是一个无人占领的空白地带。
+
+因此，本项目的新意不能写成“第一次以问题而不是人物为中心”，而应落在：
+
+- 把问题同一性从前提改成可证伪的判断；
+- 区分历史行动者问题、研究者问题与后设重建问题；
+- 允许问题出现、分裂、合并、失去可问条件、休眠和复活；
+- 用 Problem Episode + evidence + transformation edge 把这些判断做成可检查的数据结构；
+- 计算方法只生成 candidate / lead / anomaly，不自动裁决问题是否改变。
+
+详细查重与参考文献见 [`PROBLEMGESCHICHTE.md`](./PROBLEMGESCHICHTE.md)。
+
 ## 1. R. G. Collingwood：Question and Answer
 
 参考：

@@ -1,0 +1,3 @@
+# Ready-to-run research prompt
+
+> 进入 `tmzncty/problem-history` 后，先读 `AGENTS.md`、`README.md`、`ROADMAP.md`、`RESEARCH_PLAN.md`、`docs/PRIOR_ART.md`，以及已有 `METHOD/FAILURE-MODES`、pilot、episode 和 sources。不要重新做宏观规划，也不要先做图谱/UI；从 `RESEARCH_PLAN.md` 中依赖已满足的最早未完成研究项开始直接推进。核心规则是先证明历史行动者确实在面对某个问题，再谈答案：严格区分历史文本中的明确 formulation、可由语境支持的 presupposition、研究者 inference 和后来的研究术语。重要判断必须回到可定位的一手文本，并主动寻找竞争问题框架、反例和断裂；不要因为同词出现就判定同一问题连续，也不要只按政治年代分期。计算方法、embedding 和 LLM 只能生成 candidate/lead/anomaly，不能直接升级为历史结论。每完成一个证据闭环就按 `FAILURE-MODES` 自检，提交 checkpoint，然后继续下一研究切片。允许得出“材料不足”“不是同一个问题”“该 pilot 不适合”的负结论。没有真正的史料或方法 blocker 时不要停。最终汇报：新增 source/episode/synthesis、关键证据、竞争解释、不确定性、commit、下一研究项和 blocker。

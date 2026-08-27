@@ -5,14 +5,27 @@
 ## M0 — 方法校准
 
 - [ ] `docs/METHOD.md`：Problem Episode 定义；
+- [x] `docs/IDENTITY-CHECK.md`：问题同一性、连续性与后继关系的裁决规则；
 - [ ] `docs/FAILURE-MODES.md`：后见之明、永恒问题幻觉、同词=同问题等错误；
 - [ ] `schemas/problem-episode.schema.json`；
-- [ ] 设计边类型：`reformulated / narrowed / broadened / split / merged / displaced / revived`；
+- [ ] 设计边类型：`continuous / reformulated / transformed_successor / split / merged / displaced / revived / analogy_only / unrelated / undetermined`；
 - [ ] 建立 source citation 最小规范。
 
 ### M0 验收
 
 找 5 段历史文本，让两个 Agent 独立判断：文本中“明确问题”“隐含前提”“研究者推断”分别是什么。若无法稳定区分，先改方法，不做图谱。
+
+另外准备至少 7 组 `identity fixtures`，覆盖：
+
+- 同词但问题断裂；
+- 换词但问题连续；
+- 行动者宣称连续、研究者判断断裂；
+- 后人制造传统谱系；
+- 问题失去 askability；
+- A 导致 B 但 A ≠ B；
+- 只能保留 `undetermined` 的证据冲突案例。
+
+两个 Agent 必须分别给出 continuity evidence 与 discontinuity evidence。若只能输出标签、不能解释裁决，则 identity 模型不通过。
 
 ---
 
@@ -52,6 +65,7 @@
 - [ ] 可接受答案空间；
 - [ ] 至少 3 条一手证据；
 - [ ] 与前后 episode 的关系说明；
+- [ ] 通过 `docs/IDENTITY-CHECK.md` 的 episode relation 检查；
 - [ ] “为什么不是同一个问题换了个人说”论证。
 
 ### 验收
@@ -104,6 +118,14 @@ candidate / lead / anomaly
 
 所有重要变化仍需人工/Agent 回到原始文本核验。
 
+特别禁止：
+
+```text
+semantic similarity → problem identity
+```
+
+任何自动建议的 episode relation 都必须经过 `IDENTITY-CHECK`，并显式保存正反证据。
+
 ---
 
 ## M5 — 多问题交叉
@@ -146,6 +168,17 @@ Problem A
 
 建立 `docs/FAILURE-MODES.md`，至少写 10 种常见错误，并为每种设计“AI 自检问题”。
 
+### Task E — Identity Fixtures
+
+基于 `docs/IDENTITY-CHECK.md`，建立至少 7 组 pair fixtures。第一轮可以全部虚构，只测试：
+
+- relation 是否足够表达歧义；
+- Agent 能否区分 lexical continuity 与 problem continuity；
+- Agent 是否会主动寻找 counterevidence；
+- `analogy_only` / `undetermined` 是否真的会被使用，而不是所有东西都被连成演化链。
+
+通过后再换成真实历史材料。
+
 ## Stop conditions
 
 出现以下情况时先停：
@@ -154,6 +187,7 @@ Problem A
 - 研究其实已经是成熟概念史，只是换名叫问题史；
 - 分期完全依赖政治年代而非问题结构变化；
 - LLM 相似度成为唯一证据；
-- 为了画漂亮图强迫复杂争论变成一条线。
+- 为了画漂亮图强迫复杂争论变成一条线；
+- 为了维持一个既定 problem lineage，忽略核心 presupposition 已经崩塌的证据。
 
 问题史的价值首先来自**问题本身被历史化**，不是来自数据库规模。

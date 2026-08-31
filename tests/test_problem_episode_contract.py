@@ -77,6 +77,18 @@ class ProblemEpisodeContractTests(unittest.TestCase):
         with self.assertRaises(ContractError):
             self._validate_mutation(documents)
 
+    def test_actor_formulation_requires_an_actor(self) -> None:
+        documents = copy.deepcopy(self.documents)
+        documents[0]["formulations"][0]["actor_ids"] = []
+        with self.assertRaises(ContractError):
+            self._validate_mutation(documents)
+
+    def test_unretrievable_source_requires_an_explanation(self) -> None:
+        documents = copy.deepcopy(self.documents)
+        documents[0]["sources"][0].pop("notes")
+        with self.assertRaisesRegex(ContractError, "notes"):
+            self._validate_mutation(documents)
+
     def test_relation_requires_continuity_and_discontinuity_evidence(self) -> None:
         documents = copy.deepcopy(self.documents)
         documents[0]["relations"][0]["discontinuity_evidence"] = []

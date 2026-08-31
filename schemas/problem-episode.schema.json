@@ -366,8 +366,30 @@
               "reconstruction_note"
             ],
             "properties": {
+              "actor_ids": {
+                "minItems": 1
+              },
               "evidence_ids": {
                 "minItems": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "source_type": {
+                "const": "actor_explicit"
+              }
+            },
+            "required": [
+              "source_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "actor_ids": {
+                "minItems": 1
               }
             }
           }
@@ -514,7 +536,26 @@
         "notes": {
           "$ref": "#/$defs/non_empty_string"
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "retrievable": {
+                "const": false
+              }
+            },
+            "required": [
+              "retrievable"
+            ]
+          },
+          "then": {
+            "required": [
+              "notes"
+            ]
+          }
+        }
+      ]
     },
     "evidence": {
       "type": "object",

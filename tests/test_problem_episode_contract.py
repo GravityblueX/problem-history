@@ -64,6 +64,21 @@ class ProblemEpisodeContractTests(unittest.TestCase):
             {"actor_explicit", "actor_reconstructed", "researcher_analytic"},
         )
 
+    def test_fixture_suite_keeps_researcher_vocabulary_visible(self) -> None:
+        represented = {
+            vocabulary["term_source_type"]
+            for document in self.documents
+            for vocabulary in document["vocabulary"]
+        }
+        self.assertIn("actor_explicit", represented)
+        self.assertIn("researcher_analytic_label", represented)
+
+    def test_researcher_vocabulary_requires_provenance_note(self) -> None:
+        documents = copy.deepcopy(self.documents)
+        documents[2]["vocabulary"][1].pop("provenance_note")
+        with self.assertRaisesRegex(ContractError, "provenance_note"):
+            self._validate_mutation(documents)
+
     def test_reconstructed_formulation_requires_an_audit_trail(self) -> None:
         documents = copy.deepcopy(self.documents)
         documents[1]["formulations"][0].pop("reconstruction_note")

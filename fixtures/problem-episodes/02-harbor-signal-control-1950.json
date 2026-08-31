@@ -65,6 +65,7 @@
   "vocabulary": [
     {
       "term": "control rule",
+      "term_source_type": "actor_explicit",
       "meaning_in_context": "A published condition under which the shared network may change a signal state.",
       "evidence_ids": [
         "control-council-rule"

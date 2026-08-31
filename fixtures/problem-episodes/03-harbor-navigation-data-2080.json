@@ -63,10 +63,21 @@
   "vocabulary": [
     {
       "term": "approach history",
+      "term_source_type": "actor_explicit",
       "meaning_in_context": "An identity-linked record of a vessel's prior routes and warnings.",
       "evidence_ids": [
         "data-retention-dispute"
       ]
+    },
+    {
+      "term": "navigation-data governance",
+      "term_source_type": "researcher_analytic_label",
+      "meaning_in_context": "The fixture author's umbrella label for otherwise separate retention, authorization, and deletion formulations.",
+      "evidence_ids": [
+        "data-retention-dispute",
+        "data-authorization-demand"
+      ],
+      "provenance_note": "No fictional actor uses this phrase; it exists only to demonstrate how a researcher label remains visible in the data."
     }
   ],
   "institutions": [

@@ -64,6 +64,7 @@
   "vocabulary": [
     {
       "term": "continuous night flame",
+      "term_source_type": "actor_explicit",
       "meaning_in_context": "A lamp kept lit from dusk to dawn by a staffed signal station.",
       "evidence_ids": [
         "fuel-question",

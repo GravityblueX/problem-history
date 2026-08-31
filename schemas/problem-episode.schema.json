@@ -417,6 +417,7 @@
       "type": "object",
       "required": [
         "term",
+        "term_source_type",
         "meaning_in_context",
         "evidence_ids"
       ],
@@ -425,13 +426,47 @@
         "term": {
           "$ref": "#/$defs/non_empty_string"
         },
+        "term_source_type": {
+          "enum": [
+            "actor_explicit",
+            "actor_reconstructed",
+            "later_research_term",
+            "researcher_analytic_label"
+          ]
+        },
         "meaning_in_context": {
           "$ref": "#/$defs/non_empty_string"
         },
         "evidence_ids": {
           "$ref": "#/$defs/non_empty_id_list"
+        },
+        "provenance_note": {
+          "$ref": "#/$defs/non_empty_string"
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "term_source_type": {
+                "enum": [
+                  "actor_reconstructed",
+                  "later_research_term",
+                  "researcher_analytic_label"
+                ]
+              }
+            },
+            "required": [
+              "term_source_type"
+            ]
+          },
+          "then": {
+            "required": [
+              "provenance_note"
+            ]
+          }
+        }
+      ]
     },
     "institution": {
       "type": "object",

@@ -32,6 +32,8 @@ researcher_analytic  研究者为比较而提出
 
 `actor_reconstructed` 至少需要两条 evidence，并写 `reconstruction_note`；`researcher_analytic` 必须写 `researcher_note`。这不是把后两者判成“较差材料”，而是阻止它们被偷偷升级成行动者原话。
 
+词汇也必须写 `term_source_type`，区分行动者明确用词、由材料重建的用词、后来研究术语和研究者分析标签。后三者必须用 `provenance_note` 解释来源，不能因为一个现代术语很方便，就把它倒灌成历史行动者自己的分类。
+
 ## 来源与证据的最小规范
 
 一个 source 至少包含：

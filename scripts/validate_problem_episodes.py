@@ -40,6 +40,29 @@ class ContractError(Exception):
         super().__init__("\n".join(self.errors))
 
 
+class _DuplicateJsonKeyError(ValueError):
+    """Raised when one JSON object declares the same decoded key twice."""
+
+
+class _NonFiniteJsonConstantError(ValueError):
+    """Raised for JavaScript constants that the JSON decoder accepts by default."""
+
+
+def _object_with_unique_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    value: dict[str, Any] = {}
+    for key, item in pairs:
+        if key in value:
+            raise _DuplicateJsonKeyError(f"duplicate object key {key!r}")
+        value[key] = item
+    return value
+
+
+def _reject_non_finite_constant(value: str) -> None:
+    raise _NonFiniteJsonConstantError(
+        f"non-finite numeric constant {value!r} is not valid JSON"
+    )
+
+
 def _display(path: Path) -> str:
     try:
         return path.resolve().relative_to(REPO_ROOT).as_posix()
@@ -64,8 +87,18 @@ def discover_json(paths: Iterable[Path]) -> list[Path]:
 
 def _load_object(path: Path) -> dict[str, Any]:
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+        value = json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=_object_with_unique_keys,
+            parse_constant=_reject_non_finite_constant,
+        )
+    except (
+        OSError,
+        UnicodeError,
+        json.JSONDecodeError,
+        _DuplicateJsonKeyError,
+        _NonFiniteJsonConstantError,
+    ) as exc:
         raise ContractError([f"{_display(path)}: cannot load JSON: {exc}"]) from exc
     if not isinstance(value, dict):
         raise ContractError([f"{_display(path)}: document root must be an object"])

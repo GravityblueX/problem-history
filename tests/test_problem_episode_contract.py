@@ -44,6 +44,33 @@ class ProblemEpisodeContractTests(unittest.TestCase):
                 paths.append(path)
             validate_documents(SCHEMA, paths)
 
+    def _validate_raw_replacement(self, before: str, after: str) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            paths: list[Path] = []
+            replaced = False
+            for source in self.fixture_paths:
+                text = source.read_text(encoding="utf-8")
+                if not replaced and before in text:
+                    text = text.replace(before, after, 1)
+                    replaced = True
+                path = root / source.name
+                path.write_text(text, encoding="utf-8")
+                paths.append(path)
+            self.assertTrue(replaced, f"raw fixture anchor not found: {before!r}")
+            validate_documents(SCHEMA, paths)
+
+    def _validate_first_document_bytes(self, first_payload: bytes) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            paths: list[Path] = []
+            for index, source in enumerate(self.fixture_paths):
+                path = root / source.name
+                payload = first_payload if index == 0 else source.read_bytes()
+                path.write_bytes(payload)
+                paths.append(path)
+            validate_documents(SCHEMA, paths)
+
     def test_schema_is_valid_draft_2020_12(self) -> None:
         schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
         Draft202012Validator.check_schema(schema)
@@ -208,6 +235,134 @@ class ProblemEpisodeContractTests(unittest.TestCase):
         documents[0]["modern_summary"] = "This field bypasses the evidence model."
         with self.assertRaisesRegex(ContractError, "Additional properties"):
             self._validate_mutation(documents)
+
+    def test_duplicate_json_keys_are_rejected(self) -> None:
+        cases = {
+            "top-level escaped equivalent": (
+                '  "episode_id": "harbor-night-signal-fuel-1880",',
+                '  "episode_id": "shadow-episode",\n'
+                '  "\\u0065pisode_id": "harbor-night-signal-fuel-1880",',
+                "episode_id",
+            ),
+            "nested evidence identity": (
+                '      "evidence_id": "fuel-inquiry-date",',
+                '      "evidence_id": "shadow-evidence",\n'
+                '      "evidence_id": "fuel-inquiry-date",',
+                "evidence_id",
+            ),
+        }
+        for name, (before, after, key) in cases.items():
+            with self.subTest(name=name):
+                with self.assertRaisesRegex(
+                    ContractError, rf"duplicate object key '{key}'"
+                ):
+                    self._validate_raw_replacement(before, after)
+
+    def test_duplicate_schema_key_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            schema = Path(temporary) / "schema.json"
+            text = SCHEMA.read_text(encoding="utf-8")
+            schema.write_text(
+                text.replace(
+                    '  "type": "object",',
+                    '  "type": "array",\n  "type": "object",',
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ContractError, "duplicate object key 'type'"):
+                validate_documents(schema, self.fixture_paths)
+
+    def test_non_finite_json_constants_are_rejected_in_documents(self) -> None:
+        before = '    "start_year": 1880,'
+        first_name = self.fixture_paths[0].name
+        for constant in ("NaN", "Infinity", "-Infinity"):
+            with self.subTest(constant=constant):
+                with self.assertRaises(ContractError) as context:
+                    self._validate_raw_replacement(
+                        before,
+                        f'    "start_year": {constant},',
+                    )
+                message = str(context.exception)
+                self.assertIn(f"{first_name}: cannot load JSON:", message)
+                self.assertIn(
+                    f"non-finite numeric constant {constant!r} is not valid JSON",
+                    message,
+                )
+
+    def test_non_finite_json_constants_are_rejected_in_schema(self) -> None:
+        schema_text = SCHEMA.read_text(encoding="utf-8")
+        for constant in ("NaN", "Infinity", "-Infinity"):
+            with self.subTest(constant=constant):
+                with tempfile.TemporaryDirectory() as temporary:
+                    schema = Path(temporary) / "schema.json"
+                    schema.write_text(
+                        schema_text.replace(
+                            '          "minimum": -10000,',
+                            f'          "minimum": {constant},',
+                            1,
+                        ),
+                        encoding="utf-8",
+                    )
+                    with self.assertRaises(ContractError) as context:
+                        validate_documents(schema, self.fixture_paths)
+                message = str(context.exception)
+                self.assertIn("schema.json: cannot load JSON:", message)
+                self.assertIn(
+                    f"non-finite numeric constant {constant!r} is not valid JSON",
+                    message,
+                )
+
+    def test_invalid_utf8_is_reported_as_a_contract_error(self) -> None:
+        first_name = self.fixture_paths[0].name
+        invalid_document = b"\xff" + self.fixture_paths[0].read_bytes()
+        with self.assertRaises(ContractError) as context:
+            self._validate_first_document_bytes(invalid_document)
+        self.assertIn(
+            f"{first_name}: cannot load JSON:",
+            str(context.exception),
+        )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            schema = Path(temporary) / "schema.json"
+            schema.write_bytes(b"\xff" + SCHEMA.read_bytes())
+            with self.assertRaises(ContractError) as context:
+                validate_documents(schema, self.fixture_paths)
+        self.assertIn("schema.json: cannot load JSON:", str(context.exception))
+
+    def test_utf8_bom_remains_a_clean_contract_error(self) -> None:
+        bom = b"\xef\xbb\xbf"
+        first_name = self.fixture_paths[0].name
+        with self.assertRaises(ContractError) as context:
+            self._validate_first_document_bytes(
+                bom + self.fixture_paths[0].read_bytes()
+            )
+        message = str(context.exception)
+        self.assertIn(f"{first_name}: cannot load JSON:", message)
+        self.assertIn("Unexpected UTF-8 BOM", message)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            schema = Path(temporary) / "schema.json"
+            schema.write_bytes(bom + SCHEMA.read_bytes())
+            with self.assertRaises(ContractError) as context:
+                validate_documents(schema, self.fixture_paths)
+        message = str(context.exception)
+        self.assertIn("schema.json: cannot load JSON:", message)
+        self.assertIn("Unexpected UTF-8 BOM", message)
+
+    def test_strict_json_loading_accepts_large_integers_and_reused_keys(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            schema = Path(temporary) / "schema.json"
+            schema.write_text(
+                SCHEMA.read_text(encoding="utf-8").replace(
+                    "{",
+                    '{\n  "x-large-integer": ' + "9" * 512 + ",",
+                    1,
+                ),
+                encoding="utf-8",
+            )
+            counts = validate_documents(schema, self.fixture_paths)
+        self.assertEqual(counts["documents"], 3)
 
     def test_malformed_structure_returns_contract_error(self) -> None:
         documents = copy.deepcopy(self.documents)

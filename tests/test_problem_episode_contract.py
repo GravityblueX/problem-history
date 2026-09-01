@@ -116,6 +116,14 @@ class ProblemEpisodeContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "unresolved evidence"):
             self._validate_mutation(documents)
 
+    def test_unresolved_counterevidence_reference_is_rejected(self) -> None:
+        documents = copy.deepcopy(self.documents)
+        documents[0]["relations"][0]["dimensions"]["target_object"][
+            "counterevidence_ids"
+        ] = ["missing-evidence"]
+        with self.assertRaisesRegex(ContractError, "unresolved evidence"):
+            self._validate_mutation(documents)
+
     def test_unresolved_relation_target_is_rejected(self) -> None:
         documents = copy.deepcopy(self.documents)
         documents[0]["relations"][0]["target_episode_id"] = "missing-episode"
@@ -135,6 +143,58 @@ class ProblemEpisodeContractTests(unittest.TestCase):
         ]
         with self.assertRaisesRegex(ContractError, "must equal the containing"):
             self._validate_mutation(documents)
+
+    def test_relation_rejects_evidence_from_a_third_episode(self) -> None:
+        documents = copy.deepcopy(self.documents)
+        documents[0]["relations"][0]["dimensions"]["target_object"][
+            "counterevidence_ids"
+        ] = ["data-retention-dispute"]
+        with self.assertRaisesRegex(ContractError, "expected source/target"):
+            self._validate_mutation(documents)
+
+    def test_retargeted_relation_rejects_old_target_evidence(self) -> None:
+        documents = copy.deepcopy(self.documents)
+        documents[0]["relations"][0]["target_episode_id"] = documents[2][
+            "episode_id"
+        ]
+        with self.assertRaisesRegex(ContractError, "expected source/target"):
+            self._validate_mutation(documents)
+
+    def test_relation_accepts_evidence_from_both_endpoints(self) -> None:
+        documents = copy.deepcopy(self.documents)
+        documents[0]["relations"][0]["identity_claims"][0]["evidence_ids"] = [
+            "fuel-question",
+            "control-question",
+        ]
+        self._validate_mutation(documents)
+
+    def test_actor_explicit_formulation_rejects_context_only_evidence(self) -> None:
+        documents = copy.deepcopy(self.documents)
+        documents[0]["formulations"][0]["evidence_ids"] = ["fuel-ledger-costs"]
+        with self.assertRaisesRegex(
+            ContractError, "actor_explicit formulation must reference"
+        ):
+            self._validate_mutation(documents)
+
+    def test_actor_explicit_answer_rejects_silence_only_evidence(self) -> None:
+        documents = copy.deepcopy(self.documents)
+        documents[2]["answer_space"]["accepted"][0]["evidence_ids"] = [
+            "data-no-debate-citation"
+        ]
+        with self.assertRaisesRegex(
+            ContractError, "actor_explicit answer must reference"
+        ):
+            self._validate_mutation(documents)
+
+    def test_actor_explicit_formulation_accepts_a_paraphrase(self) -> None:
+        documents = copy.deepcopy(self.documents)
+        evidence = next(
+            item
+            for item in documents[0]["evidence"]
+            if item["evidence_id"] == "fuel-question"
+        )
+        evidence["evidence_type"] = "paraphrase"
+        self._validate_mutation(documents)
 
     def test_reversed_period_is_rejected(self) -> None:
         documents = copy.deepcopy(self.documents)

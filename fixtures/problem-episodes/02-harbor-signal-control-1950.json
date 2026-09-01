@@ -295,7 +295,8 @@
             "data-authorization-demand"
           ],
           "counterevidence_ids": [
-            "data-privacy-stake"
+            "data-service-defense",
+            "data-authorization-demand"
           ],
           "note": "Accountability overlaps, but privacy becomes a distinct later stake."
         },

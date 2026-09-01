@@ -32,6 +32,8 @@ researcher_analytic  研究者为比较而提出
 
 `actor_reconstructed` 至少需要两条 evidence，并写 `reconstruction_note`；`researcher_analytic` 必须写 `researcher_note`。这不是把后两者判成“较差材料”，而是阻止它们被偷偷升级成行动者原话。
 
+`actor_explicit` 的 formulation 与 answer 必须至少引用一条 `quotation` 或 `paraphrase`。`context` 与 `silence` 可以限制解释，但不能单独证明行动者明确提出了某个问题或回答。
+
 词汇也必须写 `term_source_type`，区分行动者明确用词、由材料重建的用词、后来研究术语和研究者分析标签。后三者必须用 `provenance_note` 解释来源，不能因为一个现代术语很方便，就把它倒灌成历史行动者自己的分类。
 
 ## 来源与证据的最小规范
@@ -108,6 +110,8 @@ JSON Schema 检查字段、枚举和条件要求；validator 另外检查：
 - corpus 内 episode/source/evidence/relation id 是否重复；
 - evidence → source、claim → evidence、relation → target 是否能解析；
 - relation source 是否就是包含它的 episode；
+- relation evidence 是否只属于 source / target 两端；
+- `actor_explicit` formulation / answer 是否至少有一条 quotation 或 paraphrase；
 - 起始年份是否晚于结束年份；
 - reviewed 状态是否真的写了 reviewer；
 - `fixtures/` 下的记录是否明确标成 fixture。

@@ -16,12 +16,20 @@ from jsonschema import Draft202012Validator, FormatChecker
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SCHEMA = REPO_ROOT / "schemas" / "problem-episode.schema.json"
 DEFAULT_FIXTURES = REPO_ROOT / "fixtures" / "problem-episodes"
+DIRECT_EVIDENCE_TYPES = frozenset({"quotation", "paraphrase"})
 
 
 @dataclass(frozen=True)
 class EpisodeDocument:
     path: Path
     data: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class EvidenceIndexEntry:
+    episode_id: str
+    path: Path
+    evidence_type: str
 
 
 class ContractError(Exception):
@@ -199,7 +207,7 @@ def _local_invariants(document: EpisodeDocument) -> list[str]:
 def _corpus_invariants(documents: Sequence[EpisodeDocument]) -> list[str]:
     errors: list[str] = []
     episode_owners: dict[str, Path] = {}
-    evidence_owners: dict[str, Path] = {}
+    evidence_index: dict[str, EvidenceIndexEntry] = {}
     source_owners: dict[str, Path] = {}
     relation_owners: dict[str, Path] = {}
 
@@ -214,6 +222,21 @@ def _corpus_invariants(documents: Sequence[EpisodeDocument]) -> list[str]:
         else:
             registry[identifier] = path
 
+    def register_evidence(
+        identifier: str, episode_id: str, evidence_type: str, path: Path
+    ) -> None:
+        if identifier in evidence_index:
+            errors.append(
+                f"{_display(path)}: duplicate corpus evidence_id {identifier!r}; "
+                f"first defined in {_display(evidence_index[identifier].path)}"
+            )
+        else:
+            evidence_index[identifier] = EvidenceIndexEntry(
+                episode_id=episode_id,
+                path=path,
+                evidence_type=evidence_type,
+            )
+
     for document in documents:
         data = document.data
         episode_id = data.get("episode_id")
@@ -225,28 +248,79 @@ def _corpus_invariants(documents: Sequence[EpisodeDocument]) -> list[str]:
                 register(source_owners, source_id, document.path, "source_id")
         for evidence in data.get("evidence", []):
             evidence_id = evidence.get("evidence_id")
-            if isinstance(evidence_id, str):
-                register(evidence_owners, evidence_id, document.path, "evidence_id")
+            evidence_type = evidence.get("evidence_type")
+            if (
+                isinstance(evidence_id, str)
+                and isinstance(episode_id, str)
+                and isinstance(evidence_type, str)
+            ):
+                register_evidence(
+                    evidence_id, episode_id, evidence_type, document.path
+                )
         for relation in data.get("relations", []):
             relation_id = relation.get("relation_id")
             if isinstance(relation_id, str):
                 register(relation_owners, relation_id, document.path, "relation_id")
 
+    def has_direct_evidence(evidence_ids: Iterable[str]) -> bool:
+        for evidence_id in evidence_ids:
+            entry = evidence_index.get(evidence_id)
+            if entry is not None and entry.evidence_type in DIRECT_EVIDENCE_TYPES:
+                return True
+        return False
+
     for document in documents:
         label = _display(document.path)
         for path, value in _walk(document.data):
-            if not path or path[-1] != "evidence_ids" or not isinstance(value, list):
+            if (
+                not path
+                or path[-1] not in {"evidence_ids", "counterevidence_ids"}
+                or not isinstance(value, list)
+            ):
                 continue
             for evidence_id in value:
-                owner = evidence_owners.get(evidence_id)
-                if owner is None:
+                entry = evidence_index.get(evidence_id)
+                if entry is None:
                     errors.append(
                         f"{label}:{_json_path(path)}: unresolved evidence {evidence_id!r}"
                     )
-                elif "relations" not in path and owner != document.path:
+                elif len(path) > 1 and path[0] == "relations":
+                    relation = document.data["relations"][path[1]]
+                    source = relation.get("source_episode_id")
+                    target = relation.get("target_episode_id")
+                    if entry.episode_id not in {source, target}:
+                        errors.append(
+                            f"{label}:{_json_path(path)}: relation references evidence "
+                            f"{evidence_id!r} owned by episode {entry.episode_id!r}; "
+                            f"expected source/target {source!r} or {target!r}"
+                        )
+                elif entry.path != document.path:
                     errors.append(
                         f"{label}:{_json_path(path)}: non-relation field references "
-                        f"evidence {evidence_id!r} owned by {_display(owner)}"
+                        f"evidence {evidence_id!r} owned by {_display(entry.path)}"
+                    )
+
+        for collection in ("formulations", "competing_formulations"):
+            for index, formulation in enumerate(document.data.get(collection, [])):
+                if formulation.get("source_type") != "actor_explicit":
+                    continue
+                if not has_direct_evidence(formulation.get("evidence_ids", [])):
+                    errors.append(
+                        f"{label}:$.{collection}[{index}].evidence_ids: "
+                        "actor_explicit formulation must reference at least one "
+                        "quotation or paraphrase"
+                    )
+
+        answer_space = document.data.get("answer_space", {})
+        for collection in ("accepted", "marginal", "unthinkable_or_impossible"):
+            for index, answer in enumerate(answer_space.get(collection, [])):
+                if answer.get("epistemic_status") != "actor_explicit":
+                    continue
+                if not has_direct_evidence(answer.get("evidence_ids", [])):
+                    errors.append(
+                        f"{label}:$.answer_space.{collection}[{index}].evidence_ids: "
+                        "actor_explicit answer must reference at least one quotation "
+                        "or paraphrase"
                     )
 
         for index, relation in enumerate(document.data.get("relations", [])):

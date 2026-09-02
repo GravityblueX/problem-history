@@ -9,7 +9,7 @@
 - [ ] `docs/FAILURE-MODES.md`：后见之明、永恒问题幻觉、同词=同问题等错误；
 - [ ] `schemas/problem-episode.schema.json`；
 - [ ] 设计边类型：`continuous / reformulated / transformed_successor / split / merged / displaced / revived / analogy_only / unrelated / undetermined`；
-- [ ] 建立 source citation 最小规范。
+- [x] 建立 source citation 最小规范：`docs/SOURCE-CITATION.md`。
 
 ### M0 验收
 

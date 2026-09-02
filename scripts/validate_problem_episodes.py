@@ -165,7 +165,9 @@ def _local_invariants(document: EpisodeDocument) -> list[str]:
     period = data.get("period", {})
     start = period.get("start_year")
     end = period.get("end_year")
-    if isinstance(start, int) and isinstance(end, int) and start > end:
+    # JSON Schema defines "integer" mathematically, so values such as 1880.0
+    # or 1.88e3 pass schema validation even though json.loads returns floats.
+    if start is not None and end is not None and start > end:
         errors.append(f"{label}:$.period: start_year must not exceed end_year")
 
     namespaces: dict[str, list[str]] = {

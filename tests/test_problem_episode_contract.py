@@ -230,6 +230,25 @@ class ProblemEpisodeContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "start_year must not exceed"):
             self._validate_mutation(documents)
 
+    def test_reversed_period_with_integral_json_numbers_is_rejected(self) -> None:
+        documents = copy.deepcopy(self.documents)
+        documents[0]["period"]["start_year"] = 2000.0
+        documents[0]["period"]["end_year"] = 1000.0
+        with self.assertRaisesRegex(ContractError, "start_year must not exceed"):
+            self._validate_mutation(documents)
+
+    def test_reversed_period_with_exponent_syntax_is_rejected(self) -> None:
+        before = '"start_year": 1880,\n    "end_year": 1881'
+        after = '"start_year": 2e3,\n    "end_year": 1e3'
+        with self.assertRaisesRegex(ContractError, "start_year must not exceed"):
+            self._validate_raw_replacement(before, after)
+
+    def test_ordered_period_with_integral_json_numbers_is_accepted(self) -> None:
+        documents = copy.deepcopy(self.documents)
+        documents[0]["period"]["start_year"] = 1880.0
+        documents[0]["period"]["end_year"] = 1881.0
+        self._validate_mutation(documents)
+
     def test_unknown_field_is_rejected_by_strict_schema(self) -> None:
         documents = copy.deepcopy(self.documents)
         documents[0]["modern_summary"] = "This field bypasses the evidence model."

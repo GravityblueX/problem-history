@@ -249,6 +249,22 @@ class ProblemEpisodeContractTests(unittest.TestCase):
         documents[0]["period"]["end_year"] = 1881.0
         self._validate_mutation(documents)
 
+    def test_reversed_period_covers_mixed_zero_and_negative_years(self) -> None:
+        cases = (
+            ("mixed types with zero end", 1, 0.0),
+            ("mixed types with zero start", 0.0, -1),
+            ("negative years", -1.0, -2),
+        )
+        for name, start, end in cases:
+            with self.subTest(name=name):
+                documents = copy.deepcopy(self.documents)
+                documents[0]["period"]["start_year"] = start
+                documents[0]["period"]["end_year"] = end
+                with self.assertRaisesRegex(
+                    ContractError, "start_year must not exceed"
+                ):
+                    self._validate_mutation(documents)
+
     def test_unknown_field_is_rejected_by_strict_schema(self) -> None:
         documents = copy.deepcopy(self.documents)
         documents[0]["modern_summary"] = "This field bypasses the evidence model."

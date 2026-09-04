@@ -277,6 +277,7 @@ def _local_invariants(document: EpisodeDocument) -> list[str]:
 def _corpus_invariants(documents: Sequence[EpisodeDocument]) -> list[str]:
     errors: list[str] = []
     episode_owners: dict[str, Path] = {}
+    episode_fixture_status: dict[str, bool] = {}
     evidence_index: dict[str, EvidenceIndexEntry] = {}
     source_owners: dict[str, Path] = {}
     relation_owners: dict[str, Path] = {}
@@ -311,7 +312,10 @@ def _corpus_invariants(documents: Sequence[EpisodeDocument]) -> list[str]:
         data = document.data
         episode_id = data.get("episode_id")
         if isinstance(episode_id, str):
+            is_first_owner = episode_id not in episode_owners
             register(episode_owners, episode_id, document.path, "episode_id")
+            if is_first_owner and isinstance(data.get("is_fixture"), bool):
+                episode_fixture_status[episode_id] = data["is_fixture"]
         for source in data.get("sources", []):
             source_id = source.get("source_id")
             if isinstance(source_id, str):
@@ -399,6 +403,21 @@ def _corpus_invariants(documents: Sequence[EpisodeDocument]) -> list[str]:
                 errors.append(
                     f"{label}:$.relations[{index}].target_episode_id: "
                     f"unresolved episode {target!r}"
+                )
+                continue
+
+            source_is_fixture = document.data.get("is_fixture")
+            target_is_fixture = episode_fixture_status.get(target)
+            if (
+                isinstance(source_is_fixture, bool)
+                and isinstance(target_is_fixture, bool)
+                and source_is_fixture != target_is_fixture
+            ):
+                errors.append(
+                    f"{label}:$.relations[{index}].target_episode_id: "
+                    "relations cannot cross the fixture boundary; "
+                    f"source is_fixture={str(source_is_fixture).lower()}, "
+                    f"target is_fixture={str(target_is_fixture).lower()}"
                 )
 
     return errors

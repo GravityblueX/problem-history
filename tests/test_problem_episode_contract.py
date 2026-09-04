@@ -32,17 +32,20 @@ class ProblemEpisodeContractTests(unittest.TestCase):
             json.loads(path.read_text(encoding="utf-8")) for path in cls.fixture_paths
         ]
 
+    def _write_mutation(self, root: Path, documents: list[dict]) -> list[Path]:
+        paths: list[Path] = []
+        for index, document in enumerate(documents):
+            path = root / f"fixture-{index}.json"
+            path.write_text(
+                json.dumps(document, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            paths.append(path)
+        return paths
+
     def _validate_mutation(self, documents: list[dict]) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
-            paths: list[Path] = []
-            for index, document in enumerate(documents):
-                path = root / f"fixture-{index}.json"
-                path.write_text(
-                    json.dumps(document, ensure_ascii=False, indent=2), encoding="utf-8"
-                )
-                paths.append(path)
-            validate_documents(SCHEMA, paths)
+            validate_documents(SCHEMA, self._write_mutation(root, documents))
 
     def _validate_raw_replacement(self, before: str, after: str) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -232,6 +235,67 @@ class ProblemEpisodeContractTests(unittest.TestCase):
             "fuel-question",
             "control-question",
         ]
+        self._validate_mutation(documents)
+
+    def test_relation_rejects_cross_fixture_boundary(self) -> None:
+        cases = (
+            ("fixture to non-fixture", 0, 1, True, False),
+            ("non-fixture to fixture", 1, 2, False, True),
+        )
+        for name, source_index, target_index, source_fixture, target_fixture in cases:
+            with self.subTest(name=name):
+                documents = copy.deepcopy(self.documents)
+                for document in documents:
+                    document["relations"] = []
+
+                source = documents[source_index]
+                target = documents[target_index]
+                source["relations"] = [
+                    copy.deepcopy(self.documents[source_index]["relations"][0])
+                ]
+                source["is_fixture"] = source_fixture
+                target["is_fixture"] = target_fixture
+                source["relations"][0]["source_episode_id"] = source["episode_id"]
+                source["relations"][0]["target_episode_id"] = target["episode_id"]
+
+                historical_record = target if not target_fixture else source
+                historical_record["audit"]["record_status"] = "reviewed"
+                historical_record["audit"]["reviewed_by"] = ["fixture-boundary-test"]
+                source["relations"][0]["identity_status"] = "reviewed"
+                source["relations"][0]["reviewed_by"] = ["fixture-boundary-test"]
+
+                with tempfile.TemporaryDirectory() as temporary:
+                    paths = self._write_mutation(Path(temporary), documents)
+                    source_path = paths[source_index].resolve()
+                    with self.assertRaises(ContractError) as context:
+                        validate_documents(SCHEMA, paths)
+
+                self.assertEqual(
+                    context.exception.errors,
+                    [
+                        f"{source_path}:$.relations[0]"
+                        ".target_episode_id: relations cannot cross the fixture "
+                        f"boundary; source is_fixture={str(source_fixture).lower()}, "
+                        f"target is_fixture={str(target_fixture).lower()}"
+                    ],
+                )
+
+    def test_relations_accept_matching_fixture_status(self) -> None:
+        for name, is_fixture in (
+            ("fixture relations", True),
+            ("historical relations", False),
+        ):
+            with self.subTest(name=name):
+                documents = copy.deepcopy(self.documents)
+                for document in documents:
+                    document["is_fixture"] = is_fixture
+                self._validate_mutation(documents)
+
+    def test_unrelated_fixture_and_historical_documents_share_a_corpus(self) -> None:
+        documents = copy.deepcopy(self.documents)
+        documents[1]["is_fixture"] = False
+        for document in documents:
+            document["relations"] = []
         self._validate_mutation(documents)
 
     def test_actor_explicit_formulation_rejects_context_only_evidence(self) -> None:

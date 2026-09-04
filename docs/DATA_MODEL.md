@@ -112,6 +112,7 @@ JSON Schema 检查字段、枚举和条件要求；validator 另外检查：
 - evidence → source、claim → evidence、relation → target 是否能解析；
 - relation source 是否就是包含它的 episode；
 - relation evidence 是否只属于 source / target 两端；
+- relation 两端的 `is_fixture` 是否一致（fixture 与正式 episode 不得建立关系）；
 - `actor_explicit` formulation / answer 是否至少有一条 quotation 或 paraphrase；
 - 起始年份是否晚于结束年份；
 - reviewed 状态是否真的写了 reviewer；

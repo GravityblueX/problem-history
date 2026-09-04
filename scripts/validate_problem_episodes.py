@@ -11,28 +11,18 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Iterable, Sequence
 
-from jsonschema import Draft202012Validator, FormatChecker, validators
+from jsonschema import Draft202012Validator, FormatChecker
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SCHEMA = REPO_ROOT / "schemas" / "problem-episode.schema.json"
 DEFAULT_FIXTURES = REPO_ROOT / "fixtures" / "problem-episodes"
 DIRECT_EVIDENCE_TYPES = frozenset({"quotation", "paraphrase"})
-_BASE_TYPE_CHECKER = Draft202012Validator.TYPE_CHECKER
 
-
-def _is_json_integer(_checker: Any, value: Any) -> bool:
-    """Apply JSON Schema's mathematical integer semantics to exact decimals."""
-
-    if isinstance(value, Decimal):
-        return value.is_finite() and value == value.to_integral_value()
-    return _BASE_TYPE_CHECKER.is_type(value, "integer")
-
-
-_ExactNumberDraft202012Validator = validators.extend(
-    Draft202012Validator,
-    type_checker=_BASE_TYPE_CHECKER.redefine("integer", _is_json_integer),
-)
+# Match CPython's default integer-string ceiling, but enforce it before
+# materializing exponent forms so process-wide settings cannot turn a short
+# token such as ``1e100000000`` into an unbounded integer allocation.
+_MAX_JSON_INTEGER_DIGITS = 4300
 
 
 @dataclass(frozen=True)
@@ -64,6 +54,10 @@ class _NonFiniteJsonConstantError(ValueError):
     """Raised for JavaScript constants that the JSON decoder accepts by default."""
 
 
+class _InvalidJsonNumberError(ValueError):
+    """Raised when an exact JSON number exceeds safe decoder limits."""
+
+
 def _object_with_unique_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     value: dict[str, Any] = {}
     for key, item in pairs:
@@ -77,6 +71,27 @@ def _reject_non_finite_constant(value: str) -> None:
     raise _NonFiniteJsonConstantError(
         f"non-finite numeric constant {value!r} is not valid JSON"
     )
+
+
+def _parse_json_number(value: str) -> int | Decimal:
+    """Decode exactly, normalizing mathematical integers within a fixed bound."""
+
+    try:
+        exact = Decimal(value)
+    except InvalidOperation as error:
+        raise _InvalidJsonNumberError("unrepresentable decimal exponent") from error
+
+    if not exact.is_finite():
+        raise _InvalidJsonNumberError("non-finite number")
+    if exact != exact.to_integral_value():
+        return exact
+
+    integer_digits = 1 if exact.is_zero() else exact.adjusted() + 1
+    if integer_digits > _MAX_JSON_INTEGER_DIGITS:
+        raise _InvalidJsonNumberError(
+            f"integer exceeds {_MAX_JSON_INTEGER_DIGITS} decimal digits"
+        )
+    return int(exact)
 
 
 def _display(path: Path) -> str:
@@ -107,7 +122,8 @@ def _load_object(path: Path) -> dict[str, Any]:
             path.read_text(encoding="utf-8"),
             object_pairs_hook=_object_with_unique_keys,
             parse_constant=_reject_non_finite_constant,
-            parse_float=Decimal,
+            parse_float=_parse_json_number,
+            parse_int=_parse_json_number,
         )
     except (
         OSError,
@@ -115,6 +131,7 @@ def _load_object(path: Path) -> dict[str, Any]:
         json.JSONDecodeError,
         _DuplicateJsonKeyError,
         _NonFiniteJsonConstantError,
+        _InvalidJsonNumberError,
         InvalidOperation,
     ) as exc:
         raise ContractError([f"{_display(path)}: cannot load JSON: {exc}"]) from exc
@@ -390,7 +407,7 @@ def _corpus_invariants(documents: Sequence[EpisodeDocument]) -> list[str]:
 def validate_documents(schema_path: Path, document_paths: Sequence[Path]) -> dict[str, int]:
     schema = _load_object(schema_path.resolve())
     Draft202012Validator.check_schema(schema)
-    validator = _ExactNumberDraft202012Validator(
+    validator = Draft202012Validator(
         schema,
         format_checker=FormatChecker(),
     )

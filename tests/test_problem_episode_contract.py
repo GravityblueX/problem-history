@@ -274,6 +274,40 @@ class ProblemEpisodeContractTests(unittest.TestCase):
                 '    "start_year": 1e1000000000000000000,',
             )
 
+    def test_oversized_integer_is_a_path_qualified_contract_error(self) -> None:
+        before = '    "start_year": 1880,'
+        cases = {
+            "integer literal": "1" * 4301,
+            "expanded exponent": "1e4300",
+        }
+        for name, raw_number in cases.items():
+            with self.subTest(name=name), self.assertRaises(ContractError) as context:
+                self._validate_raw_replacement(
+                    before,
+                    f'    "start_year": {raw_number},',
+                )
+
+            message = str(context.exception)
+            self.assertIn(self.fixture_paths[0].name, message)
+            self.assertIn("cannot load JSON", message)
+            self.assertIn("integer exceeds 4300 decimal digits", message)
+
+    def test_integral_decimal_schema_keywords_are_meta_schema_valid(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            schema = Path(temporary) / "schema.json"
+            schema.write_text(
+                SCHEMA.read_text(encoding="utf-8").replace(
+                    '"minItems": 1',
+                    '"minItems": 1.0',
+                    1,
+                ),
+                encoding="utf-8",
+            )
+
+            counts = validate_documents(schema, self.fixture_paths)
+
+        self.assertEqual(3, counts["documents"])
+
     def test_ordered_period_with_integral_json_numbers_is_accepted(self) -> None:
         documents = copy.deepcopy(self.documents)
         documents[0]["period"]["start_year"] = 1880.0
@@ -430,7 +464,7 @@ class ProblemEpisodeContractTests(unittest.TestCase):
             schema.write_text(
                 SCHEMA.read_text(encoding="utf-8").replace(
                     "{",
-                    '{\n  "x-large-integer": ' + "9" * 512 + ",",
+                    '{\n  "x-large-integer": ' + "9" * 4300 + ",",
                     1,
                 ),
                 encoding="utf-8",

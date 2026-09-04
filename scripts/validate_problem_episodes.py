@@ -7,16 +7,32 @@ import argparse
 import json
 import sys
 from dataclasses import dataclass
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Iterable, Sequence
 
-from jsonschema import Draft202012Validator, FormatChecker
+from jsonschema import Draft202012Validator, FormatChecker, validators
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SCHEMA = REPO_ROOT / "schemas" / "problem-episode.schema.json"
 DEFAULT_FIXTURES = REPO_ROOT / "fixtures" / "problem-episodes"
 DIRECT_EVIDENCE_TYPES = frozenset({"quotation", "paraphrase"})
+_BASE_TYPE_CHECKER = Draft202012Validator.TYPE_CHECKER
+
+
+def _is_json_integer(_checker: Any, value: Any) -> bool:
+    """Apply JSON Schema's mathematical integer semantics to exact decimals."""
+
+    if isinstance(value, Decimal):
+        return value.is_finite() and value == value.to_integral_value()
+    return _BASE_TYPE_CHECKER.is_type(value, "integer")
+
+
+_ExactNumberDraft202012Validator = validators.extend(
+    Draft202012Validator,
+    type_checker=_BASE_TYPE_CHECKER.redefine("integer", _is_json_integer),
+)
 
 
 @dataclass(frozen=True)
@@ -91,6 +107,7 @@ def _load_object(path: Path) -> dict[str, Any]:
             path.read_text(encoding="utf-8"),
             object_pairs_hook=_object_with_unique_keys,
             parse_constant=_reject_non_finite_constant,
+            parse_float=Decimal,
         )
     except (
         OSError,
@@ -98,6 +115,7 @@ def _load_object(path: Path) -> dict[str, Any]:
         json.JSONDecodeError,
         _DuplicateJsonKeyError,
         _NonFiniteJsonConstantError,
+        InvalidOperation,
     ) as exc:
         raise ContractError([f"{_display(path)}: cannot load JSON: {exc}"]) from exc
     if not isinstance(value, dict):
@@ -372,7 +390,10 @@ def _corpus_invariants(documents: Sequence[EpisodeDocument]) -> list[str]:
 def validate_documents(schema_path: Path, document_paths: Sequence[Path]) -> dict[str, int]:
     schema = _load_object(schema_path.resolve())
     Draft202012Validator.check_schema(schema)
-    validator = Draft202012Validator(schema, format_checker=FormatChecker())
+    validator = _ExactNumberDraft202012Validator(
+        schema,
+        format_checker=FormatChecker(),
+    )
 
     documents: list[EpisodeDocument] = []
     load_errors: list[str] = []

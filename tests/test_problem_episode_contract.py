@@ -243,11 +243,50 @@ class ProblemEpisodeContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "start_year must not exceed"):
             self._validate_raw_replacement(before, after)
 
+    def test_period_numbers_keep_exact_decimal_precision(self) -> None:
+        before = '"start_year": 1880,\n    "end_year": 1881'
+        cases = {
+            "rounding": '"start_year": 1880.0000000000000001,\n    "end_year": 1880',
+            "underflow": '"start_year": 1e-324,\n    "end_year": 0',
+        }
+        for name, after in cases.items():
+            with self.subTest(name=name):
+                with self.assertRaisesRegex(
+                    ContractError, "is not of type 'integer'"
+                ):
+                    self._validate_raw_replacement(before, after)
+
+    def test_large_finite_json_number_reaches_schema_bounds(self) -> None:
+        before = '    "start_year": 1880,'
+        with self.assertRaisesRegex(
+            ContractError, "greater than the maximum of 3000"
+        ):
+            self._validate_raw_replacement(
+                before,
+                '    "start_year": 1e400,',
+            )
+
+    def test_unrepresentable_decimal_exponent_is_a_contract_error(self) -> None:
+        before = '    "start_year": 1880,'
+        with self.assertRaisesRegex(ContractError, "cannot load JSON"):
+            self._validate_raw_replacement(
+                before,
+                '    "start_year": 1e1000000000000000000,',
+            )
+
     def test_ordered_period_with_integral_json_numbers_is_accepted(self) -> None:
         documents = copy.deepcopy(self.documents)
         documents[0]["period"]["start_year"] = 1880.0
         documents[0]["period"]["end_year"] = 1881.0
         self._validate_mutation(documents)
+
+        before = '"start_year": 1880,\n    "end_year": 1881'
+        for name, after in {
+            "integral exponent": '"start_year": 1.88e3,\n    "end_year": 1881.0',
+            "signed zero": '"start_year": -0.0,\n    "end_year": -0',
+        }.items():
+            with self.subTest(name=name):
+                self._validate_raw_replacement(before, after)
 
     def test_reversed_period_covers_mixed_zero_and_negative_years(self) -> None:
         cases = (

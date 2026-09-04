@@ -131,6 +131,45 @@ class ProblemEpisodeContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "notes"):
             self._validate_mutation(documents)
 
+    def test_required_prose_rejects_unicode_whitespace_only_values(self) -> None:
+        whitespace = {
+            "ASCII": " \t\n\v\f\r",
+            "next-line and no-break": "\u0085\u00a0",
+            "Ogham": "\u1680",
+            "en through hair spaces": "".join(chr(value) for value in range(0x2000, 0x200B)),
+            "line and paragraph separators": "\u2028\u2029",
+            "narrow and medium spaces": "\u202f\u205f",
+            "ideographic space and BOM": "\u3000\ufeff",
+        }
+        for name, value in whitespace.items():
+            with self.subTest(name=name, shape="blank"):
+                documents = copy.deepcopy(self.documents)
+                documents[0]["sources"][0]["citation"] = value
+                with self.assertRaisesRegex(
+                    ContractError, r"\$\.sources\[0\]\.citation"
+                ):
+                    self._validate_mutation(documents)
+
+            with self.subTest(name=name, shape="padded text"):
+                documents = copy.deepcopy(self.documents)
+                documents[0]["sources"][0]["citation"] = f"{value}史料{value}"
+                self._validate_mutation(documents)
+
+    def test_reviewed_status_requires_a_named_reviewer(self) -> None:
+        documents = copy.deepcopy(self.documents)
+        documents[0]["audit"]["record_status"] = "reviewed"
+        documents[0]["audit"]["reviewed_by"] = [" \t\r\n"]
+        with self.assertRaisesRegex(ContractError, r"\$\.audit\.reviewed_by\[0\]"):
+            self._validate_mutation(documents)
+
+        documents = copy.deepcopy(self.documents)
+        documents[0]["relations"][0]["identity_status"] = "reviewed"
+        documents[0]["relations"][0]["reviewed_by"] = ["\u3000"]
+        with self.assertRaisesRegex(
+            ContractError, r"\$\.relations\[0\]\.reviewed_by\[0\]"
+        ):
+            self._validate_mutation(documents)
+
     def test_relation_requires_continuity_and_discontinuity_evidence(self) -> None:
         documents = copy.deepcopy(self.documents)
         documents[0]["relations"][0]["discontinuity_evidence"] = []

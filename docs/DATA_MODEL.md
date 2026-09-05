@@ -109,6 +109,7 @@ JSON Schema 检查字段、枚举和条件要求；validator 另外检查：
 - schema 与 episode 是否为严格 UTF-8 JSON（拒绝重复 object key 与 `NaN` / `±Infinity`）；
 - schema 自身是否为有效 Draft 2020-12；
 - corpus 内 episode/source/evidence/relation id 是否重复；
+- 同一有向 source/target episode 对是否只保留一个 repository relation verdict；
 - evidence → source、claim → evidence、relation → target 是否能解析；
 - relation source 是否就是包含它的 episode；
 - relation evidence 是否只属于 source / target 两端；

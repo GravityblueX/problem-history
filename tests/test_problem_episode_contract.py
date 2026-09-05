@@ -213,6 +213,35 @@ class ProblemEpisodeContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "must equal the containing"):
             self._validate_mutation(documents)
 
+    def test_duplicate_directed_relation_verdict_is_rejected(self) -> None:
+        documents = copy.deepcopy(self.documents)
+        duplicate = copy.deepcopy(documents[0]["relations"][0])
+        duplicate["relation_id"] = "fuel-to-control-alternative"
+        duplicate["relation"] = "unrelated"
+        for claim in duplicate["identity_claims"]:
+            claim["claim_id"] += "-alternative"
+        documents[0]["relations"].append(duplicate)
+
+        with self.assertRaisesRegex(
+            ContractError,
+            r"duplicate corpus relation 'harbor-night-signal-fuel-1880' -> "
+            r"'harbor-signal-control-1950'",
+        ):
+            self._validate_mutation(documents)
+
+    def test_reverse_relation_remains_distinct(self) -> None:
+        documents = copy.deepcopy(self.documents)
+        reverse = copy.deepcopy(documents[0]["relations"][0])
+        reverse["relation_id"] = "control-to-fuel-comparison"
+        reverse["source_episode_id"] = documents[1]["episode_id"]
+        reverse["target_episode_id"] = documents[0]["episode_id"]
+        reverse["relation"] = "analogy_only"
+        for claim in reverse["identity_claims"]:
+            claim["claim_id"] += "-reverse"
+        documents[1]["relations"].append(reverse)
+
+        self._validate_mutation(documents)
+
     def test_relation_rejects_evidence_from_a_third_episode(self) -> None:
         documents = copy.deepcopy(self.documents)
         documents[0]["relations"][0]["dimensions"]["target_object"][

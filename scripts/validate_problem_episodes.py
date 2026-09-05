@@ -281,6 +281,7 @@ def _corpus_invariants(documents: Sequence[EpisodeDocument]) -> list[str]:
     evidence_index: dict[str, EvidenceIndexEntry] = {}
     source_owners: dict[str, Path] = {}
     relation_owners: dict[str, Path] = {}
+    relation_edges: dict[tuple[str, str], tuple[Path, int]] = {}
 
     def register(
         registry: dict[str, Path], identifier: str, path: Path, namespace: str
@@ -331,10 +332,23 @@ def _corpus_invariants(documents: Sequence[EpisodeDocument]) -> list[str]:
                 register_evidence(
                     evidence_id, episode_id, evidence_type, document.path
                 )
-        for relation in data.get("relations", []):
+        for index, relation in enumerate(data.get("relations", [])):
             relation_id = relation.get("relation_id")
             if isinstance(relation_id, str):
                 register(relation_owners, relation_id, document.path, "relation_id")
+            source = relation.get("source_episode_id")
+            target = relation.get("target_episode_id")
+            if isinstance(source, str) and isinstance(target, str):
+                edge = (source, target)
+                if edge in relation_edges:
+                    first_path, first_index = relation_edges[edge]
+                    errors.append(
+                        f"{_display(document.path)}:$.relations[{index}]: duplicate "
+                        f"corpus relation {source!r} -> {target!r}; first defined at "
+                        f"{_display(first_path)}:$.relations[{first_index}]"
+                    )
+                else:
+                    relation_edges[edge] = (document.path, index)
 
     def has_direct_evidence(evidence_ids: Iterable[str]) -> bool:
         for evidence_id in evidence_ids:

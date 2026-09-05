@@ -241,6 +241,47 @@ class MarkdownEpisodeReferenceTests(unittest.TestCase):
         self.write("README.md", readme([]))
         self.assertEqual(validate_studies(self.studies)["episodes"], 1)
 
+    def test_backtick_in_info_does_not_open_a_fence(self) -> None:
+        self.write("README.md", readme([]))
+        for indent in range(4):
+            with self.subTest(indent=indent):
+                invalid_opener = " " * indent + "```yaml`not-a-fence\n"
+                document = invalid_opener + episode(
+                    "real",
+                    fence_indent=indent,
+                    fence_marker="`" * (3 + indent % 2),
+                )
+                self.write("episodes/one.md", document)
+                self.assertEqual(validate_studies(self.studies)["episodes"], 1)
+
+    def test_tilde_fence_info_may_contain_backticks(self) -> None:
+        outer = (
+            "# Decoy\n\n~~~text`is-valid-here\n"
+            "```yaml\nepisode_id: fake\n```\n~~~\n\n"
+        )
+        self.write("episodes/one.md", outer + episode("real"))
+        self.write("README.md", readme([]))
+        self.assertEqual(validate_studies(self.studies)["episodes"], 1)
+
+    def test_invalid_backtick_info_does_not_bypass_narrow_yaml_rules(self) -> None:
+        self.write("README.md", readme([]))
+        invalid_opener = "```yaml`not-a-fence\n"
+        cases = {
+            "quoted key": (
+                episode("real").replace("episode_id: real", '"episode_id": real'),
+                "ASCII plain keys",
+            ),
+            "folded scalar": (
+                episode("real").replace("episode_id: real", "episode_id: >\n  real"),
+                "episode_id must be a single-line scalar",
+            ),
+        }
+        for name, (document, message) in cases.items():
+            with self.subTest(name=name):
+                self.write("episodes/one.md", invalid_opener + document)
+                with self.assertRaisesRegex(ReferenceError, message):
+                    validate_studies(self.studies)
+
     def test_only_cr_and_lf_create_markdown_lines(self) -> None:
         pseudo_line_endings = {
             "vertical tab": "\v",

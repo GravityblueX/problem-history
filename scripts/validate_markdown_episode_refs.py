@@ -75,7 +75,11 @@ def _yaml_blocks(text: str) -> tuple[list[YamlBlock], str | None]:
             if match is None:
                 continue
             marker = match.group("marker")
-            info = match.group("info").strip(" \t").lower()
+            raw_info = match.group("info")
+            # GFM treats backticks in a backtick fence's info as plain text.
+            if marker[0] == "`" and "`" in raw_info:
+                continue
+            info = raw_info.strip(" \t").lower()
             active_marker = marker[0]
             active_length = len(marker)
             active_indent = len(match.group("indent"))

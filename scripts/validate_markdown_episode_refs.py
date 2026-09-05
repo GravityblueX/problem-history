@@ -48,6 +48,7 @@ class Episode:
     path: Path
     episode_id: str
     predecessor: str | None
+    relation_type: str | None
 
 
 @dataclass(frozen=True)
@@ -221,12 +222,12 @@ def _parse_episode(path: Path) -> tuple[Episode | None, list[str]]:
     entries, entry_errors = _top_level_mapping_entries(
         blocks[0],
         label=label,
-        single_line_keys=frozenset({"episode_id", "predecessor"}),
+        single_line_keys=frozenset({"episode_id", "predecessor", "relation"}),
     )
     errors.extend(entry_errors)
     values: dict[str, tuple[str, int]] = {}
     for key, value, line_number in entries:
-        if key not in {"episode_id", "predecessor"}:
+        if key not in {"episode_id", "predecessor", "relation"}:
             continue
         if key in values:
             errors.append(f"{label}:{line_number}: duplicate metadata key {key!r}")
@@ -236,6 +237,14 @@ def _parse_episode(path: Path) -> tuple[Episode | None, list[str]]:
     if "episode_id" not in values:
         errors.append(f"{label}: first YAML block is missing episode_id")
         return None, errors
+
+    if ("predecessor" in values) != ("relation" in values):
+        present, required = (
+            ("predecessor", "relation")
+            if "predecessor" in values
+            else ("relation", "predecessor")
+        )
+        errors.append(f"{label}: {present} requires {required}")
 
     identifiers: dict[str, str] = {}
     for key in ("episode_id", "predecessor"):
@@ -247,10 +256,27 @@ def _parse_episode(path: Path) -> tuple[Episode | None, list[str]]:
         except ValueError as error:
             errors.append(str(error))
 
+    relation_type: str | None = None
+    if "relation" in values:
+        raw, line_number = values["relation"]
+        try:
+            relation_type = _enum_scalar(
+                raw,
+                label=f"{label}:{line_number}: relation",
+                choices=RELATION_TYPES,
+            )
+        except ValueError as error:
+            errors.append(str(error))
+
     if "episode_id" not in identifiers:
         return None, errors
     return (
-        Episode(path, identifiers["episode_id"], identifiers.get("predecessor")),
+        Episode(
+            path,
+            identifiers["episode_id"],
+            identifiers.get("predecessor"),
+            relation_type,
+        ),
         errors,
     )
 
@@ -485,10 +511,21 @@ def validate_studies(studies_root: Path = DEFAULT_STUDIES) -> dict[str, int]:
             )
         if predecessor == episode.episode_id:
             errors.append(f"{_display(episode.path)}: an episode cannot precede itself")
-        if (predecessor, episode.episode_id) not in edges:
+        edge = edges.get((predecessor, episode.episode_id))
+        if edge is None:
             errors.append(
                 f"{_display(episode.path)}: predecessor {predecessor!r} is not backed "
                 "by a README relation"
+            )
+        elif (
+            episode.relation_type is not None
+            and episode.relation_type != edge.relation_type
+        ):
+            errors.append(
+                f"{_display(episode.path)}: episode relation "
+                f"{episode.relation_type!r} does not match README relation type "
+                f"{edge.relation_type!r} at "
+                f"{_display(edge.path)}:{edge.line_number}"
             )
 
     if errors:

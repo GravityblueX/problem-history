@@ -18,6 +18,7 @@ def episode(
     episode_id: str | None,
     predecessor: str | None = None,
     *,
+    relation_type: str = "transformed_successor",
     fence_indent: int = 0,
     fence_marker: str = "```",
 ) -> str:
@@ -26,7 +27,7 @@ def episode(
         fields.append(f"episode_id: {episode_id}")
     fields.extend(["problem_id: fixture", "period: 1950", "status: active"])
     if predecessor is not None:
-        fields.append(f"predecessor: {predecessor}")
+        fields.extend([f"predecessor: {predecessor}", f"relation: {relation_type}"])
     indent = " " * fence_indent
     content = "\n".join(f"{indent}{field}" for field in fields)
     return (
@@ -157,6 +158,14 @@ class MarkdownEpisodeReferenceTests(unittest.TestCase):
         ):
             validate_studies(self.studies)
 
+        continued_relation = episode("two", "one").replace(
+            "relation: transformed_successor",
+            "relation: transformed_successor\n  suffix",
+        )
+        self.write("episodes/two.md", continued_relation)
+        with self.assertRaisesRegex(ReferenceError, "relation must be a single-line"):
+            validate_studies(self.studies)
+
     def test_unresolved_predecessor_is_rejected(self) -> None:
         self.write("episodes/one.md", episode("one", "missing"))
         self.write("README.md", readme([]))
@@ -168,6 +177,66 @@ class MarkdownEpisodeReferenceTests(unittest.TestCase):
         self.write("episodes/two.md", episode("two", "one"))
         self.write("README.md", readme([]))
         with self.assertRaisesRegex(ReferenceError, "not backed by a README relation"):
+            validate_studies(self.studies)
+
+    def test_predecessor_requires_an_episode_relation(self) -> None:
+        self.write("episodes/one.md", episode("one"))
+        missing_relation = episode("two", "one").replace(
+            "relation: transformed_successor\n", ""
+        )
+        self.write("episodes/two.md", missing_relation)
+        self.write("README.md", readme([("one", "two")]))
+        with self.assertRaisesRegex(ReferenceError, "predecessor requires relation"):
+            validate_studies(self.studies)
+
+    def test_episode_relation_requires_a_predecessor(self) -> None:
+        orphan_relation = episode("one").replace(
+            "status: active", "status: active\nrelation: continuous"
+        )
+        self.write("episodes/one.md", orphan_relation)
+        self.write("README.md", readme([]))
+        with self.assertRaisesRegex(ReferenceError, "relation requires predecessor"):
+            validate_studies(self.studies)
+
+    def test_episode_relation_must_match_the_readme_edge_type(self) -> None:
+        self.write("episodes/one.md", episode("one"))
+        self.write(
+            "episodes/two.md",
+            episode("two", "one", relation_type="continuous"),
+        )
+        self.write("README.md", readme([("one", "two")]))
+        with self.assertRaisesRegex(
+            ReferenceError, "does not match README relation type"
+        ):
+            validate_studies(self.studies)
+
+    def test_readme_edges_do_not_force_a_single_episode_predecessor(self) -> None:
+        self.write("episodes/one.md", episode("one"))
+        self.write("episodes/two.md", episode("two"))
+        self.write("README.md", readme([("one", "two")]))
+        self.assertEqual(validate_studies(self.studies)["relations"], 1)
+
+    def test_episode_relation_uses_the_contract_enum(self) -> None:
+        self.write("episodes/one.md", episode("one"))
+        self.write(
+            "episodes/two.md",
+            episode("two", "one", relation_type="same_problem"),
+        )
+        self.write("README.md", readme([("one", "two")]))
+        with self.assertRaisesRegex(ReferenceError, "relation must be one of"):
+            validate_studies(self.studies)
+
+    def test_duplicate_episode_relation_is_rejected(self) -> None:
+        self.write("episodes/one.md", episode("one"))
+        duplicate = episode("two", "one").replace(
+            "relation: transformed_successor",
+            "relation: transformed_successor\nrelation: continuous",
+        )
+        self.write("episodes/two.md", duplicate)
+        self.write("README.md", readme([("one", "two")]))
+        with self.assertRaisesRegex(
+            ReferenceError, "duplicate metadata key 'relation'"
+        ):
             validate_studies(self.studies)
 
     def test_unresolved_readme_endpoints_are_rejected(self) -> None:
@@ -278,12 +347,17 @@ class MarkdownEpisodeReferenceTests(unittest.TestCase):
             "undetermined",
         ):
             with self.subTest(relation_type=relation_type):
+                self.write(
+                    "episodes/two.md",
+                    episode("two", "one", relation_type=relation_type),
+                )
                 document = graph.replace(
                     "type: transformed_successor", f"type: {relation_type}"
                 )
                 self.write("README.md", document)
                 self.assertEqual(validate_studies(self.studies)["relations"], 1)
 
+        self.write("episodes/two.md", episode("two", "one"))
         for confidence in ("low", "medium", "high"):
             with self.subTest(confidence=confidence):
                 document = graph.replace(
@@ -327,7 +401,11 @@ class MarkdownEpisodeReferenceTests(unittest.TestCase):
 
     def test_quoted_slug_values_and_crlf_are_supported(self) -> None:
         first = episode('"first"').replace("\n", "\r\n")
-        second = episode("'second'", '"first"').replace("\n", "\r\n")
+        second = episode(
+            "'second'",
+            '"first"',
+            relation_type="'transformed_successor'",
+        ).replace("\n", "\r\n")
         graph = readme([("'first'", '"second"')]).replace("\n", "\r\n")
         self.write("episodes/one.md", first)
         self.write("episodes/two.md", second)

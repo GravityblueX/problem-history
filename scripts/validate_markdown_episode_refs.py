@@ -437,6 +437,33 @@ def discover_episode_paths(studies_root: Path) -> list[Path]:
     )
 
 
+def _predecessor_cycles(
+    predecessors: dict[str, str],
+) -> list[tuple[str, ...]]:
+    """Return each cycle once while following episode-to-predecessor pointers."""
+
+    cycles: list[tuple[str, ...]] = []
+    finished: set[str] = set()
+    for start in sorted(predecessors):
+        if start in finished:
+            continue
+
+        chain: list[str] = []
+        positions: dict[str, int] = {}
+        current = start
+        while current in predecessors and current not in finished:
+            if current in positions:
+                cycle = chain[positions[current] :] + [current]
+                cycles.append(tuple(cycle))
+                break
+            positions[current] = len(chain)
+            chain.append(current)
+            current = predecessors[current]
+        finished.update(chain)
+
+    return cycles
+
+
 def validate_studies(studies_root: Path = DEFAULT_STUDIES) -> dict[str, int]:
     paths = discover_episode_paths(studies_root)
     if not paths:
@@ -527,6 +554,24 @@ def validate_studies(studies_root: Path = DEFAULT_STUDIES) -> dict[str, int]:
                 f"{edge.relation_type!r} at "
                 f"{_display(edge.path)}:{edge.line_number}"
             )
+
+    primary_predecessors: dict[str, str] = {}
+    for episode in episodes:
+        predecessor = episode.predecessor
+        if (
+            predecessor is not None
+            and predecessor in owners
+            and predecessor != episode.episode_id
+            and owners.get(episode.episode_id) == episode.path
+        ):
+            primary_predecessors[episode.episode_id] = predecessor
+
+    for cycle in _predecessor_cycles(primary_predecessors):
+        rendered = " -> ".join(repr(episode_id) for episode_id in cycle)
+        errors.append(
+            f"{_display(owners[cycle[0]])}: predecessor cycle is not allowed: "
+            f"{rendered}"
+        )
 
     if errors:
         raise ReferenceError(errors)

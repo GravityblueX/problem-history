@@ -216,6 +216,57 @@ class MarkdownEpisodeReferenceTests(unittest.TestCase):
         self.write("README.md", readme([("one", "two")]))
         self.assertEqual(validate_studies(self.studies)["relations"], 1)
 
+    def test_primary_predecessor_cycles_are_rejected(self) -> None:
+        cases = {
+            "two nodes": (
+                {
+                    "one": "two",
+                    "two": "one",
+                },
+                "'one' -> 'two' -> 'one'",
+            ),
+            "three nodes": (
+                {
+                    "one": "three",
+                    "two": "one",
+                    "three": "two",
+                },
+                "'one' -> 'three' -> 'two' -> 'one'",
+            ),
+        }
+        for name, (predecessors, expected_cycle) in cases.items():
+            with self.subTest(name=name):
+                for episode_id, predecessor in predecessors.items():
+                    self.write(
+                        f"episodes/{episode_id}.md",
+                        episode(episode_id, predecessor),
+                    )
+                self.write(
+                    "README.md",
+                    readme(
+                        [
+                            (predecessor, episode_id)
+                            for episode_id, predecessor in predecessors.items()
+                        ]
+                    ),
+                )
+                with self.assertRaisesRegex(
+                    ReferenceError,
+                    f"predecessor cycle is not allowed: {expected_cycle}",
+                ):
+                    validate_studies(self.studies)
+
+    def test_readme_only_analogy_cycle_remains_valid(self) -> None:
+        self.write("episodes/one.md", episode("one"))
+        self.write("episodes/two.md", episode("two"))
+        graph = readme([("one", "two"), ("two", "one")]).replace(
+            "type: transformed_successor", "type: analogy_only"
+        )
+        self.write("README.md", graph)
+        self.assertEqual(
+            validate_studies(self.studies), {"episodes": 2, "relations": 2}
+        )
+
     def test_episode_relation_uses_the_contract_enum(self) -> None:
         self.write("episodes/one.md", episode("one"))
         self.write(

@@ -13,7 +13,9 @@ from typing import Iterable
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_STUDIES = REPO_ROOT / "studies"
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-FENCE_OPEN_RE = re.compile(r"^ {0,3}(?P<marker>`{3,}|~{3,})(?P<info>[^\r\n]*)$")
+FENCE_OPEN_RE = re.compile(
+    r"^(?P<indent> {0,3})(?P<marker>`{3,}|~{3,})(?P<info>[^\r\n]*)$"
+)
 MARKDOWN_LINE_END_RE = re.compile(r"\r\n|\r|\n")
 TOP_LEVEL_KEY_RE = re.compile(
     r"^(?P<key>[A-Za-z_][A-Za-z0-9_-]*):(?P<value>(?:[ \t]+.*)?)$"
@@ -62,6 +64,7 @@ def _yaml_blocks(text: str) -> tuple[list[YamlBlock], str | None]:
     blocks: list[YamlBlock] = []
     active_marker: str | None = None
     active_length = 0
+    active_indent = 0
     active_yaml = False
     active_start = 0
     active_lines: list[str] = []
@@ -75,6 +78,7 @@ def _yaml_blocks(text: str) -> tuple[list[YamlBlock], str | None]:
             info = match.group("info").strip(" \t").lower()
             active_marker = marker[0]
             active_length = len(marker)
+            active_indent = len(match.group("indent"))
             active_yaml = info == "yaml"
             active_start = line_number
             active_lines = []
@@ -88,11 +92,13 @@ def _yaml_blocks(text: str) -> tuple[list[YamlBlock], str | None]:
                 blocks.append(YamlBlock(tuple(active_lines), active_start + 1))
             active_marker = None
             active_length = 0
+            active_indent = 0
             active_yaml = False
             active_start = 0
             active_lines = []
         elif active_yaml:
-            active_lines.append(line)
+            leading_spaces = len(line) - len(line.lstrip(" "))
+            active_lines.append(line[min(active_indent, leading_spaces) :])
 
     if active_marker is not None and active_yaml:
         return blocks, f"unclosed YAML fence opened at line {active_start}"

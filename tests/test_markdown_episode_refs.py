@@ -14,19 +14,36 @@ from validate_markdown_episode_refs import (
 )  # noqa: E402
 
 
-def episode(episode_id: str | None, predecessor: str | None = None) -> str:
+def episode(
+    episode_id: str | None,
+    predecessor: str | None = None,
+    *,
+    fence_indent: int = 0,
+    fence_marker: str = "```",
+) -> str:
     fields = []
     if episode_id is not None:
         fields.append(f"episode_id: {episode_id}")
     fields.extend(["problem_id: fixture", "period: 1950", "status: active"])
     if predecessor is not None:
         fields.append(f"predecessor: {predecessor}")
-    return "# Fixture\n\n```yaml\n" + "\n".join(fields) + "\n```\n"
+    indent = " " * fence_indent
+    content = "\n".join(f"{indent}{field}" for field in fields)
+    return (
+        f"# Fixture\n\n{indent}{fence_marker}yaml\n"
+        f"{content}\n{indent}{fence_marker}\n"
+    )
 
 
-def readme(relations: list[tuple[str, str]]) -> str:
+def readme(
+    relations: list[tuple[str, str]],
+    *,
+    fence_indent: int = 0,
+    fence_marker: str = "```",
+) -> str:
     declaration = "relations:" if relations else "relations: []"
-    lines = ["# Fixture study", "", "```yaml", declaration]
+    indent = " " * fence_indent
+    lines = ["# Fixture study", "", f"{indent}{fence_marker}yaml", declaration]
     for source, target in relations:
         lines.extend(
             [
@@ -35,7 +52,8 @@ def readme(relations: list[tuple[str, str]]) -> str:
                 "    type: transformed_successor",
             ]
         )
-    return "\n".join(lines + ["```", ""])
+    lines[3:] = [f"{indent}{line}" for line in lines[3:]]
+    return "\n".join(lines + [f"{indent}{fence_marker}", ""])
 
 
 class MarkdownEpisodeReferenceTests(unittest.TestCase):
@@ -271,6 +289,40 @@ class MarkdownEpisodeReferenceTests(unittest.TestCase):
         spaced = episode("real").replace("```yaml\n", "``` \tyaml \t\n")
         self.write("episodes/one.md", spaced)
         self.assertEqual(validate_studies(self.studies)["episodes"], 1)
+
+    def test_indented_yaml_fences_are_deindented_like_gfm(self) -> None:
+        cases = ((1, "```"), (2, "~~~"), (3, "```"))
+        for fence_indent, fence_marker in cases:
+            with self.subTest(indent=fence_indent, marker=fence_marker):
+                self.write(
+                    "episodes/one.md",
+                    episode(
+                        "first",
+                        fence_indent=fence_indent,
+                        fence_marker=fence_marker,
+                    ),
+                )
+                self.write(
+                    "episodes/two.md",
+                    episode(
+                        "second",
+                        "first",
+                        fence_indent=fence_indent,
+                        fence_marker=fence_marker,
+                    ),
+                )
+                self.write(
+                    "README.md",
+                    readme(
+                        [("first", "second")],
+                        fence_indent=fence_indent,
+                        fence_marker=fence_marker,
+                    ),
+                )
+                self.assertEqual(
+                    validate_studies(self.studies),
+                    {"episodes": 2, "relations": 1},
+                )
 
     def test_unclosed_yaml_fence_is_rejected(self) -> None:
         self.write("episodes/one.md", "# Fixture\n\n```yaml\nepisode_id: one\n")

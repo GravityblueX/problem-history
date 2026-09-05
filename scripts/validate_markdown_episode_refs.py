@@ -22,6 +22,19 @@ TOP_LEVEL_KEY_RE = re.compile(
 )
 RELATIONS_DECLARATION_RE = re.compile(r"^relations:(?:[ \t]+(?:\[\][ \t]*)?(?:#.*)?|)$")
 EMPTY_RELATIONS_DECLARATION_RE = re.compile(r"^relations:[ \t]+\[\][ \t]*(?:#.*)?$")
+RELATION_TYPES = (
+    "continuous",
+    "reformulated",
+    "transformed_successor",
+    "split",
+    "merged",
+    "displaced",
+    "revived",
+    "analogy_only",
+    "unrelated",
+    "undetermined",
+)
+RELATION_CONFIDENCES = ("low", "medium", "high")
 
 
 @dataclass(frozen=True)
@@ -43,6 +56,8 @@ class Relation:
     line_number: int
     source: str
     target: str
+    relation_type: str
+    confidence: str
 
 
 class ReferenceError(Exception):
@@ -180,6 +195,14 @@ def _slug(raw: str, *, label: str) -> str:
     return value
 
 
+def _enum_scalar(raw: str, *, label: str, choices: tuple[str, ...]) -> str:
+    value = _decode_scalar(raw, label=label)
+    if value not in choices:
+        expected = ", ".join(repr(choice) for choice in choices)
+        raise ValueError(f"{label} must be one of {expected}, got {value!r}")
+    return value
+
+
 def _parse_episode(path: Path) -> tuple[Episode | None, list[str]]:
     errors: list[str] = []
     label = _display(path)
@@ -301,7 +324,7 @@ def _parse_relations(path: Path) -> tuple[list[Relation], list[str]]:
             errors.append(f"{label}:{line_number}: malformed relation mapping")
             return
         key = match.group("key")
-        if key not in {"from", "to"}:
+        if key not in {"from", "to", "type", "confidence"}:
             return
         if key in current:
             errors.append(f"{label}:{line_number}: duplicate relation key {key!r}")
@@ -346,7 +369,7 @@ def _parse_relations(path: Path) -> tuple[list[Relation], list[str]]:
 
     relations: list[Relation] = []
     for item_line, fields in items:
-        missing = sorted({"from", "to"} - fields.keys())
+        missing = sorted({"from", "to", "type", "confidence"} - fields.keys())
         if missing:
             errors.append(
                 f"{label}:{item_line}: relation is missing {', '.join(missing)}"
@@ -359,10 +382,22 @@ def _parse_relations(path: Path) -> tuple[list[Relation], list[str]]:
             target = _slug(
                 fields["to"][0], label=f"{label}:{fields['to'][1]}: relation to"
             )
+            relation_type = _enum_scalar(
+                fields["type"][0],
+                label=f"{label}:{fields['type'][1]}: relation type",
+                choices=RELATION_TYPES,
+            )
+            confidence = _enum_scalar(
+                fields["confidence"][0],
+                label=f"{label}:{fields['confidence'][1]}: relation confidence",
+                choices=RELATION_CONFIDENCES,
+            )
         except ValueError as error:
             errors.append(str(error))
             continue
-        relations.append(Relation(path, item_line, source, target))
+        relations.append(
+            Relation(path, item_line, source, target, relation_type, confidence)
+        )
 
     if not items:
         errors.append(f"{label}: relations block contains no list items")

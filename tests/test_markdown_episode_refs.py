@@ -50,6 +50,7 @@ def readme(
                 f"  - from: {source}",
                 f"    to: {target}",
                 "    type: transformed_successor",
+                "    confidence: medium",
             ]
         )
     lines[3:] = [f"{indent}{line}" for line in lines[3:]]
@@ -222,6 +223,107 @@ class MarkdownEpisodeReferenceTests(unittest.TestCase):
                 self.write("README.md", graph)
                 with self.assertRaises(ReferenceError):
                     validate_studies(self.studies)
+
+    def test_relations_require_type_and_confidence(self) -> None:
+        self.write("episodes/one.md", episode("one"))
+        self.write("episodes/two.md", episode("two", "one"))
+        graph = readme([("one", "two")])
+        for field, declaration in {
+            "type": "    type: transformed_successor\n",
+            "confidence": "    confidence: medium\n",
+        }.items():
+            with self.subTest(field=field):
+                self.write("README.md", graph.replace(declaration, ""))
+                with self.assertRaisesRegex(
+                    ReferenceError, rf"relation is missing {field}"
+                ):
+                    validate_studies(self.studies)
+
+    def test_relation_type_and_confidence_use_contract_enums(self) -> None:
+        self.write("episodes/one.md", episode("one"))
+        self.write("episodes/two.md", episode("two", "one"))
+        graph = readme([("one", "two")])
+        cases = {
+            "unknown type": (
+                graph.replace(
+                    "type: transformed_successor", "type: definitely-not-a-relation"
+                ),
+                "relation type must be one of",
+            ),
+            "unknown confidence": (
+                graph.replace("confidence: medium", "confidence: impossible"),
+                "relation confidence must be one of",
+            ),
+        }
+        for name, (document, message) in cases.items():
+            with self.subTest(name=name):
+                self.write("README.md", document)
+                with self.assertRaisesRegex(ReferenceError, message):
+                    validate_studies(self.studies)
+
+    def test_documented_relation_metadata_values_are_supported(self) -> None:
+        self.write("episodes/one.md", episode("one"))
+        self.write("episodes/two.md", episode("two", "one"))
+        graph = readme([("one", "two")])
+        for relation_type in (
+            "continuous",
+            "reformulated",
+            "transformed_successor",
+            "split",
+            "merged",
+            "displaced",
+            "revived",
+            "analogy_only",
+            "unrelated",
+            "undetermined",
+        ):
+            with self.subTest(relation_type=relation_type):
+                document = graph.replace(
+                    "type: transformed_successor", f"type: {relation_type}"
+                )
+                self.write("README.md", document)
+                self.assertEqual(validate_studies(self.studies)["relations"], 1)
+
+        for confidence in ("low", "medium", "high"):
+            with self.subTest(confidence=confidence):
+                document = graph.replace(
+                    "confidence: medium", f"confidence: {confidence}"
+                )
+                self.write("README.md", document)
+                self.assertEqual(validate_studies(self.studies)["relations"], 1)
+
+    def test_duplicate_relation_fields_are_rejected(self) -> None:
+        self.write("episodes/one.md", episode("one"))
+        self.write("episodes/two.md", episode("two", "one"))
+        graph = readme([("one", "two")])
+        for field, (declaration, duplicate_declaration) in {
+            "from": ("  - from: one", "    from: one"),
+            "to": ("    to: two", "    to: two"),
+            "type": (
+                "    type: transformed_successor",
+                "    type: transformed_successor",
+            ),
+            "confidence": ("    confidence: medium", "    confidence: medium"),
+        }.items():
+            with self.subTest(field=field):
+                duplicate = graph.replace(
+                    declaration, f"{declaration}\n{duplicate_declaration}"
+                )
+                self.write("README.md", duplicate)
+                with self.assertRaisesRegex(
+                    ReferenceError, rf"duplicate relation key '{field}'"
+                ):
+                    validate_studies(self.studies)
+
+    def test_unknown_relation_fields_remain_outside_the_narrow_contract(self) -> None:
+        self.write("episodes/one.md", episode("one"))
+        self.write("episodes/two.md", episode("two", "one"))
+        graph = readme([("one", "two")]).replace(
+            "    confidence: medium",
+            "    confidence: medium\n    review_status: provisional",
+        )
+        self.write("README.md", graph)
+        self.assertEqual(validate_studies(self.studies)["relations"], 1)
 
     def test_quoted_slug_values_and_crlf_are_supported(self) -> None:
         first = episode('"first"').replace("\n", "\r\n")

@@ -172,41 +172,58 @@ This is probably the strongest candidate episode because it is a **direct histor
 
 ### B1. Thomas Love Peacock, “The Four Ages of Poetry” (1820)
 
-Authoritative modern edition/context:
+Authoritative modern edition/context (public Summary checked, not the full chapter):
 
 - Cambridge edition in *Nightmare Abbey*, Appendix C: https://www.cambridge.org/core/books/abs/nightmare-abbey/four-ages-of-poetry-1820/A8D0F758CB955A53DBD0B220CD0A1D1E
 
 Cambridge records that the essay appeared anonymously in the first and only number of *Olliers Literary Miscellany* in summer 1820. It also records that the essay prompted Shelley to write *A Defence of Poetry* in February–March 1821.
 
-Hilary Fraser's chapter in *The Cambridge Companion to Victorian Poetry* reproduces Peacock's deliberately provocative description of the modern poet as a **“semi-barbarian in a civilized community”** and summarizes the anti-Romantic historicist argument that poetry has become backward-looking in a civilization whose intellectual energies have moved elsewhere.
+The public Summary of Hilary Fraser's chapter in *The Cambridge Companion to Victorian Poetry* reproduces Peacock's deliberately provocative description of the modern poet as a **“semi-barbarian in a civilized community”** and summarizes the anti-Romantic historicist argument that poetry has become backward-looking in a civilization whose intellectual energies have moved elsewhere.
 
 - Cambridge: https://www.cambridge.org/core/books/abs/cambridge-companion-to-victorian-poetry/victorian-poetry-and-historicism/B00838AE31DA2598425CC3823FA730D4
 
-### Actor formulation — provisional pending first-edition facsimile check
+Page-stable primary-text reprint checked:
+
+- H. F. B. Brett-Smith, ed., *Peacock's Four Ages of Poetry; Shelley's Defence of Poetry; Browning's Essay on Shelley* (Boston: Houghton Mifflin, 1921), hereafter **Brett-Smith 1921**. [Boston Public Library / Internet Archive item](https://archive.org/details/peacocksfourages00peac); [PDF](https://archive.org/download/peacocksfourages00peac/peacocksfourages00peac.pdf). Accessed 2026-09-08.
+
+Selected passages below were checked against the 1921 scan images, not only OCR. All paired locators in B1/B2 distinguish **printed pages** from **one-based PDF pages** in this 158-page PDF; they are not Internet Archive leaf numbers. The Bibliographical Note, printed p. xxvii / PDF p. 33, calls Peacock's text a verbatim reprint of the 1820 *Olliers Literary Miscellany*, pp. 183–200. That is the editor's stated source basis, **not an independent collation of the 1820 original by this packet**.
+
+| Peacock passage in Brett-Smith 1921 | Printed page | One-based PDF page |
+|---|---:|---:|
+| “semi-barbarian in a civilized community”; intellect moving backward like a crab | 16 | 56 |
+| intellectual power turns into “other and better channels”; mathematicians, chemists, historians and political economists displace poetry's former intellectual position | 19 | 59 |
+
+### Actor formulation — text located; interpretation provisional
 
 Peacock's problem is not Sidney's moral legitimacy problem. The operative challenge is historical obsolescence:
 
 > if modern civilization increasingly organizes serious intellectual work through science, philosophy, political economy, and other knowledge practices, what claim remains for the modern poet?
 
-This is currently reconstructed from a scholarly edition plus scholarly quotation/context. Before promoting every clause to `explicit_actor`, verify the 1820 periodical text or a page-stable critical edition.
+This question is a reconstruction grounded in the located primary-text reprint, not Peacock's own interrogative wording. Satirical utterance does not by itself establish a stable anti-poetry conviction: Brett-Smith's introduction, printed p. x / PDF p. 16, also reads the essay as mocking the claims of useful studies as well as contemporary poets. That is a competing later interpretation, not a settled actor-intention verdict. The 1820 original remains uncollated, and the satire, correspondence and audience context still need testing before a stronger reconstruction is adopted.
 
-### B2. Percy Bysshe Shelley, *A Defence of Poetry* (written 1821)
+### B2. Percy Bysshe Shelley, *A Defence of Poetry* (written 1821; first published 1840)
 
 Primary source:
 
 - Project Gutenberg HTML: https://www.gutenberg.org/cache/epub/5428/pg5428-images.html
 
+Composition and publication are separate: the Cambridge Summary above dates writing to February–March 1821; the *Defence* first appeared posthumously in Mary Shelley's *Essays, Letters from Abroad, Translations and Fragments* (1840), vol. I, pp. 1–57 (Brett-Smith 1921, Bibliographical Note, printed p. xxviii / PDF p. 34). The direct response in composition does **not** establish an 1821 public printed exchange or broad contemporary reception.
+
+The same Note, printed pp. xxx–xxxii / PDF pp. 36–38, identifies the 1921 Shelley text as a reprint of the 1840 edition with **ten misprints corrected**; references to Peacock removed from the published text are supplied in the notes, not restored to the main text. This editorial account and the selected 1921 pages have been checked, **not Shelley's 1821 manuscripts or the 1840 first-edition facsimile**. Gutenberg #5428 is a later HTML transcription (released 2004-04-01; updated 2013-06-16); its precise print base is not established here. Do not silently equate these textual witnesses.
+
 ### Actor-explicit counter-formulation
 
 Shelley explicitly takes up the language of utility and argues against conceding the civic/intellectual field to “reasoners and mechanists.” His response does not simply say that poetry has one more practical use alongside chemistry or economics. It changes what counts as utility and what poetry is.
 
-Key actor moves in the primary text:
+Key actor moves and checked locators:
 
-- poetry in a broad sense is the expression of imagination;
-- imagination is central to moral sympathy — the capacity to enter another's pains and pleasures;
-- narrow calculating utility is inadequate to judge poetry;
-- poetry is especially needed when external/material accumulation outruns internal imaginative capacity;
-- poets can function as unacknowledged legislators in the broad formation of social possibility.
+| Actor move | Locator / verification |
+|---|---|
+| poetry in a broad sense is the expression of imagination | Brett-Smith 1921, printed p. 23 / PDF p. 63; scan checked |
+| imagination is central to moral sympathy — the capacity to enter another's pains and pleasures | printed p. 33 / PDF p. 73; scan checked |
+| narrow calculating utility is inadequate to judge poetry | printed pp. 49–51 / PDF pp. 89–91; scan checked, including the qualified value assigned to promoters of narrow utility |
+| poetry is especially needed when external/material accumulation outruns internal imaginative capacity | printed pp. 52–53 / PDF pp. 92–93; scan checked |
+| poets can function as unacknowledged legislators in the broad formation of social possibility | Gutenberg #5428, *A Defence of Poetry*, Part I, final paragraph's last sentence; HTML checked, no separate scan verification of this sentence |
 
 ### Problem structure
 
@@ -230,9 +247,9 @@ answer_space:
 
 ### Evidence strength
 
-- **High** for Shelley's actor formulation: full open primary text.
-- **High** that Peacock's 1820 essay prompted Shelley's 1821 response: Cambridge critical-edition context.
-- **Medium-high** for this packet's detailed Peacock formulation until the first-edition / critical-edition text is page-verified directly.
+- **High** for Shelley's stated actor moves: full open HTML plus the selected 1921 scan passages above, with their different verification limits preserved.
+- **High** that Peacock's 1820 essay prompted Shelley's 1821 composition: Cambridge critical-edition Summary; not a claim of public circulation in 1821.
+- **High** for Peacock's located wording in the 1921 reprint; the fuller question reconstruction and interpretation of satire remain **provisional**. First-edition collation has not been completed.
 
 ### Relation to Sidney — hypothesis only
 
@@ -441,9 +458,9 @@ This makes `split`, `transformed_successor`, `displaced`, and `analogy_only` gen
 |---|---|---:|---|
 | Sidney defines poesy through teaching/delight and virtuous action | 1595 primary text | High | actor |
 | Gosson's 1579 attack is part of Sidney's immediate polemical context | Cambridge edition/context note | High | later scholarly context; direct Gosson check pending |
-| Peacock's essay appeared in 1820 and directly prompted Shelley's 1821 *Defence* | Cambridge critical edition | High | publication/transmission history |
-| Peacock frames modern poetry as historically backward/obsolete | Cambridge edition + Cambridge scholarly quotation | Medium-high pending first-edition text check | actor claim mediated by scholarly edition |
-| Shelley redefines utility through imagination/moral sympathy and answers reason/mechanism claims | 1821 primary text | High | actor |
+| Peacock's essay appeared in 1820 and directly prompted Shelley's 1821 composition | Cambridge critical-edition Summary | High for the stated dates/trigger; not public reception | publication/composition history |
+| Peacock's essay voices a backward/obsolete modern-poetry challenge | Brett-Smith 1921, printed pp. 16, 19 / PDF pp. 56, 59; scans checked | High for wording; interpretation provisional | actor text in a later reprint; satire and first-edition collation boundaries remain |
+| Shelley redefines utility through imagination/moral sympathy and answers reason/mechanism claims | composed 1821; Brett-Smith's 1921 reprint of the 1840 text, printed pp. 33, 49–53 / PDF pp. 73, 89–93; scans checked | High for these passages | actor text through a specified later edition, not manuscript verification |
 | Arnold assigns poetry interpretive/consolatory/sustaining future functions and a high evaluative standard | 1880 text | High | actor |
 | Wilde rejects moral/immoral classification of books and moral usefulness as governing artistic criterion | 1891 Preface | High | actor |
 | Wilde's Preface belongs to a moral/aesthetic reception controversy | Cambridge scholarship + publication history | High for context | later reconstruction of immediate context |
@@ -458,16 +475,16 @@ This makes `split`, `transformed_successor`, `displaced`, and `analogy_only` gen
 Available now:
 
 - Sidney full public-domain text;
-- Shelley full public-domain text;
+- Shelley full public-domain HTML plus selected scan-checked passages in Brett-Smith 1921;
 - Arnold historical transcription with original page markers;
 - Wilde full public-domain text;
-- strong critical-edition metadata for Peacock plus scholarly quotation.
+- Peacock's page-stable primary-text reprint in Brett-Smith 1921, with the key passages above scan-checked, alongside Cambridge scholarly context.
 
 High-value verification targets:
 
 1. Stephen Gosson, *The Schoole of Abuse* (1579), direct facsimile / reliable transcription, to reconstruct the actual accusation Sidney is answering rather than relying on later summaries.
-2. Peacock's 1820 *Olliers Literary Miscellany* text or a page-stable critical edition, so the episode can contain exact actor locators independent of secondary quotation.
-3. Shelley's manuscript / authoritative critical edition and the abandoned first response, to distinguish the immediate reply from the larger independent treatise.
+2. Peacock's 1820 *Olliers Literary Miscellany* original, to collate the now-located 1921 reprint; satire, correspondence and reception still require contextual checks.
+3. Shelley's 1821 manuscripts, abandoned first response and 1840 first-edition facsimile, to test textual changes and distinguish composition from the later published treatise; the selected 1921 reprint passages do not complete those checks.
 4. Arnold's 1880 first-edition Ward volume / scan, to lock pagination and edition provenance.
 5. Wilde's 1890 magazine text, 1891 Preface publication history, and contemporary reviews, to reconstruct precisely which accusation/refusal belongs to which moment.
 
@@ -550,8 +567,8 @@ But the third node may need to split into two episodes rather than be forced int
 ## 11. Next source targets
 
 1. Verify Gosson 1579 directly and reconstruct the charge Sidney actually answers.
-2. Obtain page-stable Peacock 1820 text and separate satire/rhetorical provocation from stable proposition.
-3. Compare Shelley's immediate response drafts with the finished *Defence* to see whether the problem itself expands during composition.
+2. Collate the located 1921 Peacock reprint with the 1820 original and test satire/rhetorical provocation against correspondence and audience evidence before treating it as stable proposition.
+3. Compare Shelley's immediate response drafts with the finished *Defence* and its 1840 publication, keeping composition, editorial changes and public reception distinct.
 4. Reconstruct the 1890–91 *Dorian Gray* reception chain from contemporary reviews, Wilde's replies, the 1891 Preface, and revised novel.
 5. Only after those source checks, run pairwise `IDENTITY-CHECK` for Sidney→Shelley, Peacock→Shelley, Shelley→Arnold, Arnold→Wilde.
 6. Compare this candidate's final M1 score against the remaining three un-surveyed candidates before selecting a pilot.

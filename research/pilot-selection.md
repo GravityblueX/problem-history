@@ -23,7 +23,7 @@ For each candidate, test:
 
 | Candidate | M1 survey | Provisional note |
 |---|---|---|
-| 文学有什么用？ | pending | — |
+| 文学有什么用？ | [surveyed in companion packet](pilot-candidates/literature-use.md) | strong method case with high duplication/category-instability risk; not selected |
 | 知识与身份 | pending | — |
 | 机器能否思考？ | pending formal M1 survey | repository already contains substantial M0 calibration and 1972–1990 AI-field material; do not treat that as automatic pilot selection |
 | **技术是否替代劳动？** | **surveyed below** | **strong provisional contender** |
@@ -590,7 +590,7 @@ That is more demanding than a history of the term `technological unemployment` a
 | Emergence/disappearance testability | 4/5 | Berg gives strong leads; primary transition work still needed |
 | Hindsight-risk productivity | 5/5 | modern AI discourse strongly tempts perennial-problem projection |
 | Risk of duplicating mature scholarship | **4/5 risk** | requires strict identity/transformation contribution |
-| Overall as method-testing pilot | **strong provisional contender** | do not select until remaining four candidates are surveyed |
+| Overall as method-testing pilot | **strong provisional contender** | literature is surveyed separately; do not select until the remaining three candidates are surveyed |
 
 ---
 

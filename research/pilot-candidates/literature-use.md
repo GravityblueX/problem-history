@@ -158,11 +158,28 @@ answer_space:
 
 - **High** for Sidney's actor wording: accessible primary text with stable internal passage location.
 - **High** for the c. 1581–82 / Gosson contextual lead: Cambridge scholarly edition/context note.
-- **Not yet direct primary evidence** for Gosson's exact formulation in this packet; his 1579 text should be verified directly before building a full exchange-level episode.
+- **High for the selected Gosson wording below**, checked against a 1579 facsimile; Sidney's uptake and a full exchange-level reconstruction remain unverified.
 
 ### Hindsight warning
 
 Do not replace `poesy` with a supposedly timeless category `literature` without argument. Do not translate Sidney's hierarchy of learning into a modern claim about measurable educational outcomes.
+
+### Gosson 1579 — direct competing evidence, not a completed exchange
+
+Stephen Gosson, *The Schoole of Abuse* (London: for Thomas Woodcocke, 1579). [Internet Archive microfilm item](https://archive.org/details/bim_early-english-books-1475-1640_the-schoole-of-abuse-co_gosson-stephen_1579); [PDF](https://archive.org/download/bim_early-english-books-1475-1640_the-schoole-of-abuse-co_gosson-stephen_1579/bim_early-english-books-1475-1640_the-schoole-of-abuse-co_gosson-stephen_1579.pdf). Accessed 2026-09-08. The title image (PDF p. 1) identifies this **1579 Woodcocke witness**; priority among impressions and the original holding-library chain are not established here. The catalogue records microfilm `IA40313013-22` and number `12097.5`; the modern carrier is not the historical object itself.
+
+The following passages and their surrounding context were checked against scan images, not only OCR. Locators pair printed **folios** with **one-based PDF pages in this 107-page file**, not Internet Archive leaf numbers. Short quotations normalize long-s, consonantal u/v and i/j, spacing and line-end hyphenation; they are reading transcriptions, not a diplomatic edition.
+
+| Located actor wording / move | Folio or section | One-based PDF page |
+|---|---|---:|
+| Declares “I take upon mee to drive you from Playes”; presents his own past playwriting as a fault from which he is turning. | *To the Reader*, opening and continuation | 12–14 |
+| Distinguishes some sober, learned, honest players; explicitly says “some of their Playes are without rebuke”. | 22r–v | 59–60 |
+| Praises selected moral/political examples, including his own Catiline work: its stated aim is to show the reward of traitors and necessary government of learned men, exemplified by Cicero. The ensuing commendation is expressly adapted from what he attributes to Maximus Tyrius on Homer. | 22v–23r | 60–61 |
+| Immediately limits even these praised plays: “yet are they not fit for every mans dyet: neither ought they commonly to bee shewen.” | 23v, opening | 62 |
+
+Selective praise and the restriction on common exposure must be read together: this is neither denial of every merit in every play nor general approval of theatrical attendance. The ensuing repentance (fol. 23v / PDF p. 62) and references to sin, God and scriptural authority (fol. 25r / PDF p. 65) also prevent treating the book's stakes as purely secular. These are Gosson's stated purposes and distinctions, not measured audience effects, independently verified biographies, or a modern problem about all `Literature`.
+
+The dedication heading names Philip Sidney (unnumbered, PDF p. 3, repeated at p. 5). That establishes the named dedicatee, **not Sidney's reading, acceptance or particular reply**. Cambridge's contextual account above remains a separate scholarly input; these selected pages do not complete a Sidney–Gosson exchange history or establish problem identity.
 
 ---
 
@@ -457,7 +474,8 @@ This makes `split`, `transformed_successor`, `displaced`, and `analogy_only` gen
 | Claim | Evidence | Strength | Layer |
 |---|---|---:|---|
 | Sidney defines poesy through teaching/delight and virtuous action | 1595 primary text | High | actor |
-| Gosson's 1579 attack is part of Sidney's immediate polemical context | Cambridge edition/context note | High | later scholarly context; direct Gosson check pending |
+| Gosson's 1579 attack is part of Sidney's immediate polemical context | Cambridge edition/context note | High for this scholarly contextual account | later scholarly context; Sidney uptake and the full exchange remain unverified |
+| Gosson seeks to draw readers from plays, distinguishes some players/plays from abuse, but restricts even praised plays from common exposure | 1579 Woodcocke witness, *To the Reader* / PDF pp. 12–14; fols. 22r–23v / PDF pp. 59–62; scans checked | High for these located statements | actor text through a microfilm facsimile; not audience effects or Sidney's response |
 | Peacock's essay appeared in 1820 and directly prompted Shelley's 1821 composition | Cambridge critical-edition Summary | High for the stated dates/trigger; not public reception | publication/composition history |
 | Peacock's essay voices a backward/obsolete modern-poetry challenge | Brett-Smith 1921, printed pp. 16, 19 / PDF pp. 56, 59; scans checked | High for wording; interpretation provisional | actor text in a later reprint; satire and first-edition collation boundaries remain |
 | Shelley redefines utility through imagination/moral sympathy and answers reason/mechanism claims | composed 1821; Brett-Smith's 1921 reprint of the 1840 text, printed pp. 33, 49–53 / PDF pp. 73, 89–93; scans checked | High for these passages | actor text through a specified later edition, not manuscript verification |
@@ -475,6 +493,7 @@ This makes `split`, `transformed_successor`, `displaced`, and `analogy_only` gen
 Available now:
 
 - Sidney full public-domain text;
+- Gosson's 1579 Woodcocke witness, with selected passages and surrounding context scan-checked above;
 - Shelley full public-domain HTML plus selected scan-checked passages in Brett-Smith 1921;
 - Arnold historical transcription with original page markers;
 - Wilde full public-domain text;
@@ -482,7 +501,7 @@ Available now:
 
 High-value verification targets:
 
-1. Stephen Gosson, *The Schoole of Abuse* (1579), direct facsimile / reliable transcription, to reconstruct the actual accusation Sidney is answering rather than relying on later summaries.
+1. Extend the selected direct Gosson checks to textual collation and contemporary response evidence; test precisely which charges Sidney answers and his uptake rather than treating a dedication as a completed exchange.
 2. Peacock's 1820 *Olliers Literary Miscellany* original, to collate the now-located 1921 reprint; satire, correspondence and reception still require contextual checks.
 3. Shelley's 1821 manuscripts, abandoned first response and 1840 first-edition facsimile, to test textual changes and distinguish composition from the later published treatise; the selected 1921 reprint passages do not complete those checks.
 4. Arnold's 1880 first-edition Ward volume / scan, to lock pagination and edition provenance.
@@ -566,7 +585,7 @@ But the third node may need to split into two episodes rather than be forced int
 
 ## 11. Next source targets
 
-1. Verify Gosson 1579 directly and reconstruct the charge Sidney actually answers.
+1. Collate the located Gosson witness and investigate Sidney's uptake and answering passages; the selected direct quotations and exceptions above do not yet reconstruct the full exchange.
 2. Collate the located 1921 Peacock reprint with the 1820 original and test satire/rhetorical provocation against correspondence and audience evidence before treating it as stable proposition.
 3. Compare Shelley's immediate response drafts with the finished *Defence* and its 1840 publication, keeping composition, editorial changes and public reception distinct.
 4. Reconstruct the 1890–91 *Dorian Gray* reception chain from contemporary reviews, Wilde's replies, the 1891 Preface, and revised novel.
